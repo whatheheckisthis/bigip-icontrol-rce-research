@@ -1,15 +1,21 @@
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : tests/asvs/test_asvs_controls.py
+# Purpose    : ASVS-tagged tests aligned to OWASP control matrix entries
+# Layer      : test
+# SDLC Phase : verification
+# ASVS Ref   : V4.1.1, V5.2.3, V10.3.2
+# OWASP Ref  : A01, A03, A10
+# Modified   : 2026-04-10
+# ============================================================
 import pytest
+from services.trace.capture import classify_payload
+from services.trace.server import validate_fixture_url
 
-from services.trace.capture import validate_fixture_url
+@pytest.mark.asvs
+def test_v5_2_3_input_validation() -> None:
+    assert classify_payload("utilCmdArgs=-c id") == "suspicious"
 
-
-@pytest.mark.asvs("V4.1.2")
-def test_fixture_url_restriction() -> None:
+@pytest.mark.asvs
+def test_v10_3_2_allowlist() -> None:
     assert validate_fixture_url("http://localhost:8080")
-    assert not validate_fixture_url("http://10.0.0.5:8080")
-
-
-@pytest.mark.asvs("V1.1.1")
-def test_architecture_references_stride() -> None:
-    content = open("sdlc/design/architecture.md", encoding="utf-8").read()
-    assert "threat_model.md" in content

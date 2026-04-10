@@ -1,29 +1,22 @@
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : services/evidence/ledger.py
+# Purpose    : Defines append-only in-memory evidence ledger behavior
+# Layer      : service
+# SDLC Phase : implementation
+# ASVS Ref   : V7.1.1
+# OWASP Ref  : A09
+# Modified   : 2026-04-10
+# ============================================================
 from __future__ import annotations
+from dataclasses import dataclass
 
-import sqlite3
-from pathlib import Path
+@dataclass(frozen=True)
+class LedgerEntry:
+    evidence_id: str
+    payload: str
 
+LEDGER: list[LedgerEntry] = []
 
-class EvidenceLedger:
-    def __init__(self, db_path: str = "evidence.db") -> None:
-        self.db_path = db_path
-        self._init_db()
-
-    def _init_db(self) -> None:
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS evidence_ledger (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    evidence_id TEXT NOT NULL,
-                    payload TEXT NOT NULL
-                )
-                """
-            )
-
-    def append(self, evidence_id: str, payload: str) -> None:
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute(
-                "INSERT INTO evidence_ledger(evidence_id, payload) VALUES (?, ?)",
-                (evidence_id, payload),
-            )
+def append_entry(entry: LedgerEntry) -> None:
+    LEDGER.append(entry)

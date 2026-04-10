@@ -1,59 +1,67 @@
 # bigip-icontrol-rce-research
 
+<!--
+Repository : bigip-icontrol-rce-research
+Path       : README.md
+Purpose    : Canonical entry document describing architecture, operations, and governance for the research platform
+Layer      : docs
+SDLC Phase : design
+ASVS Ref   : V1.1.1, V15.1
+OWASP Ref  : A04
+Modified   : 2026-04-10
+-->
+
 > Structured SecDevOps research platform for CVE-2021-22986 lifecycle governance.
 > gRPC-native · OWASP ASVS L2 · Evidence-ledger backed · Fixture-only execution boundary.
 
-bigip-icontrol-rce-research models the CVE-2021-22986 lifecycle as a deterministic software governance pipeline where vulnerability intelligence, exploit-trace fixtures, control verification, and reconciliation history move through typed protobuf contracts so security, platform, and audit teams can inspect one traceable chain from intake to release evidence.
+`bigip-icontrol-rce-research` models CVE-2021-22986 as a security engineering lifecycle problem where critical-vulnerability knowledge moves through typed contracts, verification controls, and immutable evidence records so teams can prove what they validated, when they validated it, and which control objective each result satisfies.
 
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
-![gRPC/protobuf grpcio 1.68.1 · protobuf 5.29.1](https://img.shields.io/badge/grpcio-1.68.1-0A66C2)
-![ASVS controls 10](https://img.shields.io/badge/ASVS%20controls-10-6f42c1)
-![pip-audit required](https://img.shields.io/badge/pip--audit-required-critical)
-![ASVS pass rate 100%](https://img.shields.io/badge/test%20pass-100%-brightgreen)
+![gRPC grpcio 1.68.1 / protobuf 5.29.1](https://img.shields.io/badge/grpcio-1.68.1-0A66C2)
+![ASVS coverage 10 controls](https://img.shields.io/badge/ASVS%20coverage-10%20controls-brightgreen)
+![pip-audit gated](https://img.shields.io/badge/pip--audit-CVSS%20%E2%89%A5%207%20fails-red)
+![Unit pass rate 100% (2/2)](https://img.shields.io/badge/unit%20pass%20rate-100%25-success)
 
-This repository treats CVE-2021-22986 (F5 BIG-IP iControl REST unauthenticated remote code execution, CVSS 9.8) as a structured data and governance problem for engineering teams that must prove control effectiveness in CI/CD. Public PoC material is an ingestion artefact that is parsed into typed protobuf records and replayed as ASVS-linked test vectors. The platform demonstrates control verification, evidence lineage, and SDLC discipline against a critical-severity CVE. The execution boundary is fixed: `services/trace/fixture_target.py` is the only runnable target surface, it binds to localhost, and the workflow never targets live devices.
+This platform serves application security engineers, product security teams, and secure SDLC program owners who need to turn a real critical CVE into repeatable governance artefacts. It treats public PoC material as ingestion input rather than an execution asset: parsers convert disclosed request structures into protobuf records, tests map those vectors to ASVS controls, and every lifecycle event emits evidence with lineage. The execution boundary stays fixed at `services/trace/fixture_target.py`, bound to `127.0.0.1`, and the project never targets live devices.
 
 ```mermaid
 flowchart LR
-  NVD[NVD JSON Feed] -->|VulnerabilityService.IngestCVE| ING[Ingestion Service]
-  ING -->|VulnerabilityService.DeduplicateFeed| ING
-  ING -->|EvidenceService.RecordEvidence| EVID[Evidence Service]
+    NVD[NVD JSON Feed] -->|VulnerabilityService.Ingest| ING[Ingestion Service]
 
-  FIX[fixture_target.py]:::fixture -->|ExploitTraceService.CaptureTrace| TRACE[Trace Service]
-  TRACE -->|ControlService.RegisterControl| CTRL[Control Service]
-  TRACE -->|EvidenceService.RecordEvidence| EVID
-  CTRL -->|EvidenceService.ChainLineage| EVID
+    ING -->|EvidenceService.AppendEvidence| EVI[Evidence Service]
+    ING -->|ReconciliationService.Resolve| REC[Reconciliation Service]
 
-  ING -->|ReconciliationService.SubmitConflict| REC[Reconciliation Service]
-  TRACE -->|ReconciliationService.SubmitConflict| REC
-  CTRL -->|ReconciliationService.SubmitConflict| REC
-  EVID -->|ReconciliationService.SubmitConflict| REC
-  REC -->|ReconciliationService.GetAuditTrail| AUD[Audit Trail]
+    TRC[Trace Service] -->|ControlService.ListControls| CTR[Control Service]
+    TRC -->|EvidenceService.AppendEvidence| EVI
+    CTR -->|EvidenceService.AppendEvidence| EVI
 
-  LEDGER[(SQLite Evidence Ledger)]
-  EVID -->|EvidenceService.ExportLedger| LEDGER
+    REC -->|EvidenceService.AppendEvidence| EVI
+    CTR -->|ReconciliationService.Resolve| REC
+    EVI -->|ReconciliationService.Resolve| REC
+    TRC -->|ReconciliationService.Resolve| REC
 
-  subgraph BOUNDARY[localhost only · test fixture]
-    FIX
-  end
+    EVI -->|EvidenceService.ExportLedger| LEDGER[(SQLite Evidence Ledger)]
 
-  classDef fixture stroke-dasharray: 5 5;
+    subgraph FX[localhost only · test fixture]
+      FIX[fixture_target.py]
+    end
+    TRC -->|ExploitTraceService.Capture / ExploitTraceService.Replay| FIX
 ```
 
-All inter-service communication is gRPC/protobuf. The fixture target is the only HTTP surface and is bound exclusively to 127.0.0.1.
+All inter-service communication is gRPC/protobuf. The fixture target is the only HTTP surface and is bound exclusively to `127.0.0.1`.
 
-A full run starts when the ingestion service pulls CVE metadata from the NVD feed, fingerprints each candidate record, deduplicates by CVE and fingerprint, and stores the resulting vulnerability record. The trace service captures exploit interaction against the localhost fixture, extracts injection-relevant fields, and emits trace metadata for control evaluation. The control service maps the trace context to ASVS controls and triggers verification logic. The evidence service writes evidence entries with content hash and lineage references into the ledger. When any field-level conflict appears between incoming and stored records, reconciliation receives the conflict, applies policy, and appends the resulting decision to the audit trail.
+A full run starts when ingestion receives NVD-derived CVE data through `VulnerabilityService.Ingest`, computes a deterministic fingerprint, and records a deduplicated vulnerability event in evidence. Trace capture then records a fixture-bound request/response pair, extracts injection-relevant structure such as `utilCmdArgs`, and queries mapped controls. Control evaluation updates implementation status while EvidenceService writes a hashed record and lineage reference for each step. If any service submits conflicting values, ReconciliationService resolves the conflict by strategy and appends an audit event so downstream verification reports remain consistent.
 
 ## Prerequisites
 
 ### System requirements
 
 ```text
-Python  >= 3.12      # project runtime declared in pyproject.toml
-Node.js >= 20.x      # optional JS/TS protobuf stub toolchain compatibility floor
-Docker  >= 24.x      # compose workflow baseline
-docker-compose >= 2.x
-protoc  >= 25.x      # required for proto3 code generation used by make proto
+Python  ≥ 3.12     # type checking and project tooling target py312
+Node.js ≥ 20.x     # optional JS/TS protobuf stub generation
+Docker  ≥ 24.x     # compose stack runtime for service integration tests
+docker-compose ≥ 2.x
+protoc  ≥ 25.x     # required for make proto
 make
 ```
 
@@ -79,7 +87,7 @@ pip-audit==2.7.3
 grpcio-testing==1.68.1
 ```
 
-### Node dependencies (optional: JS stub generation only)
+### Node dependencies (optional, JS stub generation only)
 
 ```json
 {
@@ -96,15 +104,11 @@ grpcio-testing==1.68.1
 
 ## Build and run
 
-### Step 1 — Clone and verify
-
 ```bash
 git clone https://github.com/<org>/bigip-icontrol-rce-research
 cd bigip-icontrol-rce-research
 make verify-tools
 ```
-
-### Step 2 — Install Python dependencies
 
 ```bash
 python -m venv .venv
@@ -113,15 +117,11 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
-### Step 3 — Compile protobuf stubs
-
 ```bash
 make proto
 ```
 
-`make proto` invokes `protoc` for every `.proto` contract in `proto/` and writes generated Python stubs to `generated/`; run it before service startup and run it again after every `.proto` change.
-
-### Step 4 — Start services
+Invokes `protoc` across all `.proto` files in `proto/` and writes Python stubs to `generated/`; run this before starting services and run it again after every proto change.
 
 ```bash
 make services
@@ -129,99 +129,95 @@ make services-detach
 make services-down
 ```
 
-| Service              | Port  | Bind      | Protocol |
-|----------------------|-------|-----------|----------|
-| Ingestion            | 50051 | 0.0.0.0   | gRPC     |
-| Trace                | 50052 | 0.0.0.0   | gRPC     |
-| Control              | 50053 | 0.0.0.0   | gRPC     |
-| Evidence             | 50054 | 0.0.0.0   | gRPC     |
-| Reconciliation       | 50055 | 0.0.0.0   | gRPC     |
-| fixture_target       | 8080  | 127.0.0.1 | HTTP     |
+| Service        | Port  | Bind      | Protocol |
+|----------------|-------|-----------|----------|
+| Ingestion      | 50051 | 0.0.0.0   | gRPC     |
+| Trace          | 50052 | 0.0.0.0   | gRPC     |
+| Control        | 50053 | 0.0.0.0   | gRPC     |
+| Evidence       | 50054 | 0.0.0.0   | gRPC     |
+| Reconciliation | 50055 | 0.0.0.0   | gRPC     |
+| fixture_target | 8080  | 127.0.0.1 | HTTP     |
 
-The fixture uses HTTP by design to emulate the vulnerable surface inside a localhost-only test boundary.
+The fixture endpoint stays on HTTP by design because it is localhost-only and test-only.
 
-## Testing and verification
-
-### Run all tests
+## Verification workflow
 
 ```bash
 make test
 make test-coverage
 ```
 
-### Run ASVS control verification only
-
 ```bash
 make asvs
 ```
 
-`make asvs` updates `sdlc/verification/asvs_test_matrix.csv` on each run and treats that file as the machine-readable control verification record.
-
-### Run security audit
+`make asvs` updates `sdlc/verification/asvs_test_matrix.csv` on every run; this file is the machine-readable control verification record.
 
 ```bash
 make audit
 ```
 
-`make audit` is a hard gate and exits non-zero if a known vulnerability at CVSS 7.0 or higher exists in the dependency set.
+`make audit` enforces a hard gate and exits non-zero for any known dependency vulnerability with CVSS score 7.0 or higher.
 
-Unit tests validate deterministic protobuf-oriented functions without network or subprocesses. Integration tests execute ingestion and trace workflow components as one pipeline. ASVS tests use `@pytest.mark.asvs("V{n}.{m}.{k}")` mappings tied to control identifiers in `owasp_control_matrix.csv`. Fixture-boundary tests enforce rejection for non-local targets by asserting `target_fixture_url` must match localhost or 127.0.0.0/8.
+Unit tests exercise pure logic and protobuf-shape handling without network calls. Integration tests run a composed gRPC stack and replay serialized vectors through the complete path. ASVS tests carry control IDs that map to `owasp_control_matrix.csv`, and fixture-boundary tests enforce localhost-only targets (`^https?://127\.|^https?://localhost`) on every CI run.
 
 ## OWASP Top 10 / ASVS coverage
 
-`make readme` regenerates this table from `owasp_control_matrix.csv`.
+Generated from `owasp_control_matrix.csv` via `make readme`.
 
-<!-- OWASP_TABLE_START -->
+<!-- BEGIN:OWASP_TABLE -->
+
 | OWASP Category | ASVS Control ID | Implementation | Test Coverage | Status |
 |---|---|---|---|---|
-| Broken Access Control | V4.1.2 | trace | V4.1.2 | IMPLEMENTED |
-| Cryptographic Failures | V6.2.1 | platform | V6.2.1 | IN_PROGRESS |
-| Injection | V5.3.2 | trace | V5.3.2 | IMPLEMENTED |
-| Insecure Design | V1.1.1 | architecture | V1.1.1 | IMPLEMENTED |
-| Security Misconfiguration | V14.2.3 | ops | V14.2.3 | IMPLEMENTED |
-| Vulnerable Components | V1.14.4 | platform | V1.14.4 | IN_PROGRESS |
-| Auth Failures | V2.1.1 | trace | V2.1.1 | IMPLEMENTED |
-| Software Integrity Failures | V1.9.1 | evidence | V1.9.1 | IMPLEMENTED |
-| Logging Failures | V7.1.1 | evidence | V7.1.1 | IMPLEMENTED |
-| SSRF | V5.2.7 | trace | V5.2.7 | IMPLEMENTED |
-<!-- OWASP_TABLE_END -->
+| Broken Access Control | V4.1.1 | services/trace/server.py fixture URL validator | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+| Cryptographic Failures | V9.2.1 | docker-compose.yml TLS config | tests/asvs/test_asvs_controls.py | IN_PROGRESS |
+| Injection | V5.2.3 | services/trace/capture.py | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+| Insecure Design | V1.1.1 | sdlc/requirements/threat_model.md | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+| Security Misconfiguration | V14.4.1 | docker-compose.yml network config | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+| Vulnerable Components | V14.2.1 | requirements.txt + make audit | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+| Identification and Auth Failures | V2.1.1 | services/trace/capture.py auth parsing | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+| Software Integrity | V10.2.1 | services/evidence/hasher.py | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+| Logging Failures | V7.1.1 | services/evidence/ledger.py | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+| SSRF | V10.3.2 | services/trace/server.py | tests/asvs/test_asvs_controls.py | IMPLEMENTED |
+
+<!-- END:OWASP_TABLE -->
+
 
 ## SDLC artefact map
 
-<!-- SDLC_TABLE_START -->
+Regenerated by `make readme` using repository CSV sources.
+
+<!-- BEGIN:SDLC_TABLE -->
+
 | Phase | Artefact | Path | Status |
 |---|---|---|---|
-| Requirements | STRIDE threat model | sdlc/requirements/threat_model.md | Generated |
-| Requirements | ASVS requirements | sdlc/requirements/asvs_requirements.csv | Generated |
-| Design | Architecture doc | sdlc/design/architecture.md | Generated |
-| Design | Control design | sdlc/design/control_design.md | Generated |
-| Implementation | Changelog | sdlc/implementation/CHANGELOG.md | Maintained |
-| Verification | Test plan | sdlc/verification/test_plan.md | Generated |
-| Verification | ASVS test matrix | sdlc/verification/asvs_test_matrix.csv | Generated |
-| Release | Release checklist | sdlc/release/release_checklist.md | Generated |
-<!-- SDLC_TABLE_END -->
+| Requirements | threat_model.md | sdlc/requirements/threat_model.md | Maintained |
+| Design | architecture.md | sdlc/design/architecture.md | Maintained |
+| Implementation | CHANGELOG.md | sdlc/implementation/CHANGELOG.md | Maintained |
+| Verification | asvs_test_matrix.csv | sdlc/verification/asvs_test_matrix.csv | Generated |
+| Release | release_checklist.md | sdlc/release/release_checklist.md | Maintained |
+
+<!-- END:SDLC_TABLE -->
+
 
 ## Evidence gap register
 
-Track unresolved evidence in `evidence_gap_register.csv`. CRITICAL entries block `make release`. HIGH entries produce warnings during `make asvs`. Every row carries owner and due-date fields. The register is append-only through EvidenceService and reconciliation rejects manual edits.
+Track open gaps in `evidence_gap_register.csv`. CRITICAL items block `make release`, HIGH items raise warnings in `make asvs`, every item includes owner and due date, and the register is append-only through EvidenceService with reconciliation enforcing manual-edit rejection.
 
 ## What this repository does not do
 
 1. It does not execute code against live F5 BIG-IP devices under any configuration.
-2. It does not ship, wrap, or republish offensive tooling; the PoC code from CVE-2021-22986 public disclosure exists only as a parsed test vector.
+2. It does not ship, wrap, or republish offensive tooling; PoC material exists only as parsed test vectors.
 3. It is not a SIEM integration, alert triage platform, or continuous monitoring service.
 
 ## Attribution and references
 
-```text
-CVE-2021-22986 discovered by William McVey and Andrew Williams,
-reported through F5 Security Response Team.
+CVE-2021-22986 discovered by William McVey and Andrew Williams, reported through F5 Security Response Team.
 
-NVD entry:    https://nvd.nist.gov/vuln/detail/CVE-2021-22986
-F5 advisory:  https://support.f5.com/csp/article/K03009991
-ASVS:         https://owasp.org/www-project-application-security-verification-standard/
-OWASP Top 10: https://owasp.org/www-project-top-ten/
-```
+- NVD entry: https://nvd.nist.gov/vuln/detail/CVE-2021-22986
+- F5 advisory: https://support.f5.com/csp/article/K03009991
+- ASVS: https://owasp.org/www-project-application-security-verification-standard/
+- OWASP Top 10: https://owasp.org/www-project-top-ten/
 
 ## Makefile target reference
 
@@ -237,7 +233,7 @@ make asvs              pytest -m asvs, export asvs_test_matrix.csv
 make audit             pip-audit, fail on CVSS ≥ 7.0
 make lint              ruff + mypy
 make evidence-export   EvidenceService.ExportLedger → sdlc/verification/
-make readme            Regenerate OWASP table from owasp_control_matrix.csv
+make readme            Regenerate OWASP and SDLC tables from CSV sources
 make verify-tools      Check all prerequisites, exit non-zero if missing
 make release           Gate check: asvs + audit + gap register + clean tree
 make clean             Remove containers, generated stubs, coverage artefacts

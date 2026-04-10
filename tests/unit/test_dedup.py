@@ -1,7 +1,14 @@
-from services.ingestion.dedup import CanonicalVulnerability, build_fingerprint
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : tests/unit/test_dedup.py
+# Purpose    : Unit tests for ingestion fingerprint determinism
+# Layer      : test
+# SDLC Phase : verification
+# ASVS Ref   : V14.2.1
+# OWASP Ref  : A06
+# Modified   : 2026-04-10
+# ============================================================
+from services.ingestion.dedup import fingerprint
 
-
-def test_build_fingerprint_stable_sorting() -> None:
-    a = CanonicalVulnerability("CVE-2021-22986", "AV:N/AC:L", ["16.1", "15.1"])
-    b = CanonicalVulnerability("CVE-2021-22986", "AV:N/AC:L", ["15.1", "16.1"])
-    assert build_fingerprint(a) == build_fingerprint(b)
+def test_fingerprint_deterministic() -> None:
+    assert fingerprint("CVE-1", "AV:N", ["1.0", "2.0"]) == fingerprint("CVE-1", "AV:N", ["2.0", "1.0"])

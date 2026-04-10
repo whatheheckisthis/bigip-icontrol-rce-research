@@ -1,5 +1,13 @@
-asvs_id,category,requirement_text,applicable_to_this_cve,rationale
-V4.1.2,Access Control,Enforce resource access constraints,true,Fixture URL lockdown models BAC
-V6.2.1,Cryptography,Protect service channels in transit,true,gRPC TLS requirement
-V5.3.2,Validation,Validate dangerous command input,true,Injection vector utilCmdArgs
-V1.1.1,Architecture,Integrate threat modelling into design,true,STRIDE informs topology
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : sdlc/requirements/asvs_requirements.csv
+# Purpose    : ASVS requirements baseline for platform verification
+# Layer      : sdlc
+# SDLC Phase : requirements
+# ASVS Ref   : V1.1.1
+# OWASP Ref  : all
+# Modified   : 2026-04-10
+# ============================================================
+asvs_id,requirement_text,owner,status
+V5.2.3,Validate all command-like inputs prior to processing,security-architect,ACTIVE
+V10.3.2,Constrain outbound request targets to allowlisted fixture URLs,platform-owner,ACTIVE

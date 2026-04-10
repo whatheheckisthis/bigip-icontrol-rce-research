@@ -1,20 +1,15 @@
-"""Ingestion service placeholder implementation for VulnerabilityService."""
-
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : services/ingestion/server.py
+# Purpose    : Ingestion service entrypoint and in-memory workflow orchestration
+# Layer      : service
+# SDLC Phase : implementation
+# ASVS Ref   : V1.1.2
+# OWASP Ref  : A04
+# Modified   : 2026-04-10
+# ============================================================
 from __future__ import annotations
+from services.ingestion.dedup import fingerprint
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-
-class IngestionService:
-    def __init__(self) -> None:
-        self._records: dict[str, dict] = {}
-
-    def ingest(self, record: dict) -> tuple[bool, str]:
-        cve_id = record["cve_id"]
-        if cve_id in self._records and self._records[cve_id]["fingerprint"] == record["fingerprint"]:
-            logger.info("deduplicated cve_id=%s", cve_id)
-            return False, "duplicate fingerprint"
-        self._records[cve_id] = record
-        return True, "ingested"
+def ingest_record(cve_id: str, cvss_vector: str, versions: list[str]) -> str:
+    return fingerprint(cve_id=cve_id, cvss_vector=cvss_vector, affected_versions=versions)

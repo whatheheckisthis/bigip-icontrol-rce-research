@@ -1,12 +1,14 @@
-from services.ingestion.server import IngestionService
-from services.trace.server import ExploitTraceService
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : tests/integration/test_pipeline.py
+# Purpose    : Integration sanity test for core helper workflow
+# Layer      : test
+# SDLC Phase : verification
+# ASVS Ref   : V1.1.2
+# OWASP Ref  : A04
+# Modified   : 2026-04-10
+# ============================================================
+from services.ingestion.server import ingest_record
 
-
-def test_ingest_then_capture_pipeline() -> None:
-    ingestion = IngestionService()
-    created, _ = ingestion.ingest({"cve_id": "CVE-2021-22986", "fingerprint": "abc"})
-    assert created
-
-    trace = ExploitTraceService()
-    trace_id = trace.capture_trace({"trace_id": "trace-1", "target_fixture_url": "http://localhost:8080"})
-    assert trace_id == "trace-1"
+def test_pipeline_ingest_returns_hash() -> None:
+    assert len(ingest_record("CVE-2021-22986", "AV:N", ["16.0"])) == 64
