@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package bigip.research.v1;
+
+enum ImplementationStatus {
+  NOT_STARTED = 0;
+  IN_PROGRESS = 1;
+  IMPLEMENTED = 2;
+  VERIFIED = 3;
+}
+
+message ControlRecord {
+  string control_id = 1;
+  string owasp_category = 2;
+  string description = 3;
+  ImplementationStatus implementation_status = 4;
+  repeated string evidence_refs = 5;
+  string last_verified_timestamp = 6;
+}
+
+message RegisterControlRequest { ControlRecord control = 1; }
+message RegisterControlResponse { string control_id = 1; }
+message UpdateStatusRequest { string control_id = 1; ImplementationStatus implementation_status = 2; }
+message UpdateStatusResponse { bool updated = 1; }
+message GetControlRequest { string control_id = 1; }
+message GetControlResponse { ControlRecord control = 1; }
+message ListByOWASPCategoryRequest { string owasp_category = 1; }
+message ListByOWASPCategoryResponse { repeated ControlRecord controls = 1; }
+message ExportControlMatrixRequest {}
+message ExportControlMatrixResponse { bytes csv = 1; }
+
+service ControlService {
+  rpc RegisterControl(RegisterControlRequest) returns (RegisterControlResponse);
+  rpc UpdateStatus(UpdateStatusRequest) returns (UpdateStatusResponse);
+  rpc GetControl(GetControlRequest) returns (GetControlResponse);
+  rpc ListByOWASPCategory(ListByOWASPCategoryRequest) returns (ListByOWASPCategoryResponse);
+  rpc ExportControlMatrix(ExportControlMatrixRequest) returns (ExportControlMatrixResponse);
+}

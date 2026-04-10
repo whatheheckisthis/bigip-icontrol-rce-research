@@ -1,0 +1,11 @@
+owasp_id,owasp_title,asvs_control,implementation_status,service_owner
+A01,Broken Access Control,V4.1.2,IMPLEMENTED,trace
+A02,Cryptographic Failures,V6.2.1,IN_PROGRESS,platform
+A03,Injection,V5.3.2,IMPLEMENTED,trace
+A04,Insecure Design,V1.1.1,IMPLEMENTED,architecture
+A05,Security Misconfiguration,V14.2.3,IMPLEMENTED,ops
+A06,Vulnerable Components,V1.14.4,IN_PROGRESS,platform
+A07,Auth Failures,V2.1.1,IMPLEMENTED,trace
+A08,Software Integrity Failures,V1.9.1,IMPLEMENTED,evidence
+A09,Logging Failures,V7.1.1,IMPLEMENTED,evidence
+A10,SSRF,V5.2.7,IMPLEMENTED,trace

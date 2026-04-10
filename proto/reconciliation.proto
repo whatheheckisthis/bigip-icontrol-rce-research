@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package bigip.research.v1;
+
+message ConflictDetail {
+  string current_value = 1;
+  string incoming_value = 2;
+  string source_uri = 3;
+}
+
+enum ResolutionStrategy {
+  LATEST_WINS = 0;
+  SOURCE_PRIORITY = 1;
+  MANUAL = 2;
+}
+
+message ReconciliationRecord {
+  string record_id = 1;
+  string record_type = 2;
+  map<string, ConflictDetail> field_conflicts = 3;
+  ResolutionStrategy resolution_strategy = 4;
+  string resolved_at = 5;
+  string resolved_by = 6;
+}
+
+message SubmitConflictRequest { ReconciliationRecord record = 1; }
+message SubmitConflictResponse { string record_id = 1; }
+message ResolveConflictRequest { string record_id = 1; ResolutionStrategy strategy = 2; }
+message ResolveConflictResponse { bool resolved = 1; }
+message GetAuditTrailRequest { string record_id = 1; }
+message GetAuditTrailResponse { repeated string events = 1; }
+message ListUnresolvedRequest {}
+message ListUnresolvedResponse { repeated ReconciliationRecord records = 1; }
+
+service ReconciliationService {
+  rpc SubmitConflict(SubmitConflictRequest) returns (SubmitConflictResponse);
+  rpc ResolveConflict(ResolveConflictRequest) returns (ResolveConflictResponse);
+  rpc GetAuditTrail(GetAuditTrailRequest) returns (GetAuditTrailResponse);
+  rpc ListUnresolved(ListUnresolvedRequest) returns (ListUnresolvedResponse);
+}

@@ -1,0 +1,2 @@
+gap_id,description,owner,due_date,status,severity
+GAP-001,Populate full ASVS L2 control set,sec-eng,2026-05-15,OPEN,MEDIUM

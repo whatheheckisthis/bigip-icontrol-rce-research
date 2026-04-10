@@ -1,0 +1,5 @@
+asvs_id,category,requirement_text,applicable_to_this_cve,rationale
+V4.1.2,Access Control,Enforce resource access constraints,true,Fixture URL lockdown models BAC
+V6.2.1,Cryptography,Protect service channels in transit,true,gRPC TLS requirement
+V5.3.2,Validation,Validate dangerous command input,true,Injection vector utilCmdArgs
+V1.1.1,Architecture,Integrate threat modelling into design,true,STRIDE informs topology

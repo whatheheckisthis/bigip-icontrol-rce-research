@@ -1,0 +1,19 @@
+[project]
+name = "bigip-icontrol-rce-research"
+version = "0.1.0"
+description = "gRPC-native SecDevOps research platform for CVE-2021-22986"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi==0.115.0",
+  "grpcio==1.68.1",
+  "grpcio-tools==1.68.1",
+  "pydantic==2.9.2",
+  "pytest==8.3.4",
+  "uvicorn==0.32.0"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = [
+  "asvs(id): marks ASVS verification tests"
+]
