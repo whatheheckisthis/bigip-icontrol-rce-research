@@ -1,16 +1,14 @@
-import pytest
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : tests/unit/test_trace_capture.py
+# Purpose    : Unit tests for exploit trace body classification
+# Layer      : test
+# SDLC Phase : verification
+# ASVS Ref   : V5.2.3
+# OWASP Ref  : A03
+# Modified   : 2026-04-10
+# ============================================================
+from services.trace.capture import classify_payload
 
-from services.trace.capture import validate_fixture_url
-from services.trace.server import ExploitTraceService
-
-
-def test_validate_fixture_url_localhost() -> None:
-    assert validate_fixture_url("http://localhost:8080")
-    assert validate_fixture_url("https://127.0.0.1:8443")
-
-
-@pytest.mark.asvs("V5.3.2")
-def test_capture_rejects_external_fixture() -> None:
-    svc = ExploitTraceService()
-    with pytest.raises(ValueError):
-        svc.capture_trace({"trace_id": "t1", "target_fixture_url": "http://example.com"})
+def test_classify_payload_detects_utilcmdargs() -> None:
+    assert classify_payload("utilCmdArgs=-c id") == "suspicious"

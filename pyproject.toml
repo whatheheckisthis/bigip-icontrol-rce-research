@@ -1,19 +1,42 @@
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : pyproject.toml
+# Purpose    : Python project metadata, tool configuration, and test markers
+# Layer      : config
+# SDLC Phase : implementation
+# ASVS Ref   : V14.2
+# OWASP Ref  : A06
+# Modified   : 2026-04-10
+# ============================================================
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
 [project]
 name = "bigip-icontrol-rce-research"
 version = "0.1.0"
-description = "gRPC-native SecDevOps research platform for CVE-2021-22986"
+description = "SecDevOps research platform for CVE-2021-22986 lifecycle governance"
 requires-python = ">=3.12"
-dependencies = [
-  "fastapi==0.115.0",
-  "grpcio==1.68.1",
-  "grpcio-tools==1.68.1",
-  "pydantic==2.9.2",
-  "pytest==8.3.4",
-  "uvicorn==0.32.0"
-]
+license = { text = "Apache-2.0" }
+dependencies = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+lint.select = ["E", "F", "I", "N", "S", "B", "A", "C4", "T20"]
+lint.ignore = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = false
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+asyncio_mode = "auto"
+testpaths = ["tests"]
 markers = [
-  "asvs(id): marks ASVS verification tests"
+    "asvs: marks tests as ASVS control verification (deselect with '-m not asvs')",
+    "integration: marks tests requiring docker-compose stack",
+    "unit: marks tests with no external dependencies",
 ]

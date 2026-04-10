@@ -1,9 +1,16 @@
-phase,artefact,path,status
-Requirements,STRIDE threat model,sdlc/requirements/threat_model.md,Generated
-Requirements,ASVS requirements,sdlc/requirements/asvs_requirements.csv,Generated
-Design,Architecture doc,sdlc/design/architecture.md,Generated
-Design,Control design,sdlc/design/control_design.md,Generated
-Implementation,Changelog,sdlc/implementation/CHANGELOG.md,Maintained
-Verification,Test plan,sdlc/verification/test_plan.md,Generated
-Verification,ASVS test matrix,sdlc/verification/asvs_test_matrix.csv,Generated
-Release,Release checklist,sdlc/release/release_checklist.md,Generated
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : sdlc_artifact_map.csv
+# Purpose    : Index of SDLC artefacts including ownership and generation mode
+# Layer      : docs
+# SDLC Phase : verification
+# ASVS Ref   : V15.1
+# OWASP Ref  : A04
+# Modified   : 2026-04-10
+# ============================================================
+phase,artifact_path,owner,maintenance_mode
+requirements,sdlc/requirements/threat_model.md,security-architect,manual
+design,sdlc/design/architecture.md,platform-architect,manual
+implementation,sdlc/implementation/CHANGELOG.md,maintainers,manual
+verification,sdlc/verification/asvs_test_matrix.csv,qa-lead,generated
+release,sdlc/release/release_checklist.md,release-manager,manual

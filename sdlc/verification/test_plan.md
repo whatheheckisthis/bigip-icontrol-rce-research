@@ -1,13 +1,14 @@
-# Verification Plan
+# Verification Test Plan
 
-## Scope boundary
-Only fixture target simulation is tested. No live F5 BIG-IP devices are contacted.
+<!--
+Repository : bigip-icontrol-rce-research
+Path       : sdlc/verification/test_plan.md
+Purpose    : Defines verification strategy for unit, integration, and ASVS suites
+Layer      : sdlc
+SDLC Phase : verification
+ASVS Ref   : V15.2
+OWASP Ref  : all
+Modified   : 2026-04-10
+-->
 
-## Entry criteria
-- Protobuf contracts compile.
-- Unit tests available for critical control logic.
-
-## Exit criteria
-- Unit + integration tests pass.
-- ASVS-tagged tests pass.
-- Verification matrix exported and updated.
+Run unit tests on each commit, run integration and ASVS suites in CI and pre-release gates.

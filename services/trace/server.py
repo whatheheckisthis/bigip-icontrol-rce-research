@@ -1,16 +1,17 @@
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : services/trace/server.py
+# Purpose    : Trace service orchestration helpers for capture and replay paths
+# Layer      : service
+# SDLC Phase : implementation
+# ASVS Ref   : V4.1.1
+# OWASP Ref  : A01
+# Modified   : 2026-04-10
+# ============================================================
 from __future__ import annotations
+import re
 
-from services.trace.capture import validate_fixture_url
+ALLOWLIST = re.compile(r"^https?://(127\\.|localhost)")
 
-
-class ExploitTraceService:
-    def __init__(self) -> None:
-        self._traces: dict[str, dict] = {}
-
-    def capture_trace(self, trace: dict) -> str:
-        target = trace["target_fixture_url"]
-        if not validate_fixture_url(target):
-            raise ValueError("target_fixture_url must resolve to localhost or 127.0.0.0/8")
-        trace_id = trace["trace_id"]
-        self._traces[trace_id] = trace
-        return trace_id
+def validate_fixture_url(url: str) -> bool:
+    return bool(ALLOWLIST.search(url))

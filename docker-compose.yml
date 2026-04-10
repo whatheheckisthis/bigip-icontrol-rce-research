@@ -1,10 +1,80 @@
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : docker-compose.yml
+# Purpose    : Service orchestration for all gRPC components and fixture target
+# Layer      : config
+# SDLC Phase : implementation
+# ASVS Ref   : V14.4, V14.5
+# OWASP Ref  : A05
+# Modified   : 2026-04-10
+# ============================================================
+
 version: "3.9"
+
+networks:
+  research_internal:
+    driver: bridge
+    internal: true
+
 services:
-  fixture-target:
-    image: python:3.12-slim
-    command: ["python", "-m", "uvicorn", "services.trace.fixture_target:app", "--host", "127.0.0.1", "--port", "8080"]
+  ingestion:
+    build: ./services/ingestion
+    ports: ["50051:50051"]
+    networks: [research_internal]
+    environment:
+      GRPC_PORT: "50051"
+      LOG_LEVEL: "INFO"
     volumes:
-      - ./:/app
-    working_dir: /app
-    ports:
-      - "127.0.0.1:8080:8080"
+      - ./generated:/app/generated:ro
+      - evidence_ledger:/app/data
+
+  trace:
+    build: ./services/trace
+    ports: ["50052:50052"]
+    networks: [research_internal]
+    environment:
+      GRPC_PORT: "50052"
+      FIXTURE_URL_PATTERN: "^https?://(127\\.|localhost)"
+    volumes:
+      - ./generated:/app/generated:ro
+
+  control:
+    build: ./services/control
+    ports: ["50053:50053"]
+    networks: [research_internal]
+    environment:
+      GRPC_PORT: "50053"
+    volumes:
+      - ./generated:/app/generated:ro
+
+  evidence:
+    build: ./services/evidence
+    ports: ["50054:50054"]
+    networks: [research_internal]
+    environment:
+      GRPC_PORT: "50054"
+      LEDGER_PATH: "/app/data/ledger.db"
+    volumes:
+      - ./generated:/app/generated:ro
+      - evidence_ledger:/app/data
+
+  reconciliation:
+    build: ./services/reconciliation
+    ports: ["50055:50055"]
+    networks: [research_internal]
+    environment:
+      GRPC_PORT: "50055"
+    volumes:
+      - ./generated:/app/generated:ro
+
+  fixture_target:
+    build: ./services/trace
+    command: uvicorn fixture_target:app --host 127.0.0.1 --port 8080
+    ports: ["127.0.0.1:8080:8080"]
+    networks: [research_internal]
+    environment:
+      FIXTURE_MODE: "true"
+
+volumes:
+  evidence_ledger:
+    driver: local
