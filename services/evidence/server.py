@@ -1,13 +1,16 @@
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : services/evidence/server.py
+# Purpose    : Service-level helper to append entries with computed hash metadata
+# Layer      : service
+# SDLC Phase : implementation
+# ASVS Ref   : V10.2.1
+# OWASP Ref  : A08
+# Modified   : 2026-04-10
+# ============================================================
 from __future__ import annotations
+from services.evidence.hasher import sha256_text
 
-from services.evidence.ledger import EvidenceLedger
 
-
-class EvidenceService:
-    def __init__(self) -> None:
-        self.ledger = EvidenceLedger()
-
-    def record(self, evidence: dict) -> str:
-        evidence_id = evidence["evidence_id"]
-        self.ledger.append(evidence_id, str(evidence))
-        return evidence_id
+def build_evidence_record(evidence_id: str, payload: str) -> dict[str, str]:
+    return {"evidence_id": evidence_id, "payload": payload, "sha256": sha256_text(payload)}

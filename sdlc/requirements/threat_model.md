@@ -1,12 +1,14 @@
-# STRIDE Threat Model — CVE-2021-22986 Fixture Scope
+# Threat Model
 
-## Scope
-Fixture target only (`services/trace/fixture_target.py`), no live F5 devices.
+<!--
+Repository : bigip-icontrol-rce-research
+Path       : sdlc/requirements/threat_model.md
+Purpose    : STRIDE-oriented threat model for CVE-2021-22986 research workflows
+Layer      : sdlc
+SDLC Phase : requirements
+ASVS Ref   : V1.1.1
+OWASP Ref  : A04
+Modified   : 2026-04-10
+-->
 
-## Threats
-- **Spoofing**: token extraction + Basic bypass paths modelled in traces.
-- **Tampering**: utilCmdArgs command injection payload mutation.
-- **Repudiation**: missing event correlation without evidence ledger.
-- **Information Disclosure**: unauthenticated token exposure patterns.
-- **Denial of Service**: abusive replay against fixture endpoint.
-- **Elevation of Privilege**: command execution through simulated bash endpoint.
+Primary threats: spoofed trace origin, tampered evidence payloads, SSRF in fixture replay, and unbounded reconciliation overrides.

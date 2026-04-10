@@ -1,2 +1,14 @@
-gap_id,description,owner,due_date,status,severity
-GAP-001,Populate full ASVS L2 control set,sec-eng,2026-05-15,OPEN,MEDIUM
+# ============================================================
+# Repository : bigip-icontrol-rce-research
+# Path       : evidence_gap_register.csv
+# Purpose    : Tracks open evidence gaps and release blockers
+# Layer      : docs
+# SDLC Phase : verification
+# ASVS Ref   : V15.1
+# OWASP Ref  : N/A
+# Modified   : 2026-04-10
+# ============================================================
+gap_id,severity,title,description,owner,due_date,status,asvs_ref,owasp_ref,evidence_ref
+GAP-001,HIGH,TLS on gRPC channels not yet verified end-to-end,TLS termination configured in docker-compose but certificate chain validation not covered by integration test,security-ops,2026-05-15,OPEN,V9.2.1,A02,
+GAP-002,MEDIUM,ASVS V13.2.1 input validation test not written,utilCmdArgs injection pattern present in trace vectors but dedicated ASVS test not yet tagged,qa-lead,2026-05-20,OPEN,V13.2.1,A03,
+GAP-003,LOW,Reconciliation MANUAL resolution path lacks UI surface,MANUAL strategy routes to gap register but no operator notification mechanism exists,platform-owner,2026-06-01,OPEN,N/A,A09,
