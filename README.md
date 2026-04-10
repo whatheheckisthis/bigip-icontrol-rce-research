@@ -9,7 +9,7 @@ bigip-icontrol-rce-research models the CVE-2021-22986 lifecycle as a determinist
 ![gRPC/protobuf grpcio 1.68.1 · protobuf 5.29.1](https://img.shields.io/badge/grpcio-1.68.1-0A66C2)
 ![ASVS controls 10](https://img.shields.io/badge/ASVS%20controls-10-6f42c1)
 ![pip-audit required](https://img.shields.io/badge/pip--audit-required-critical)
-![ASVS pass rate 100%](https://img.shields.io/badge/test%20pass-100%-brightgreen)
+
 
 This repository treats CVE-2021-22986 (F5 BIG-IP iControl REST unauthenticated remote code execution, CVSS 9.8) as a structured data and governance problem for engineering teams that must prove control effectiveness in CI/CD. Public PoC material is an ingestion artefact that is parsed into typed protobuf records and replayed as ASVS-linked test vectors. The platform demonstrates control verification, evidence lineage, and SDLC discipline against a critical-severity CVE. The execution boundary is fixed: `services/trace/fixture_target.py` is the only runnable target surface, it binds to localhost, and the workflow never targets live devices.
 
