@@ -39,6 +39,7 @@ def main() -> None:
     parser.add_argument("--control-matrix", required=True, help="Input OWASP control matrix CSV")
     parser.add_argument("--gap-register", required=True, help="Input evidence gap register CSV")
     parser.add_argument("--output", required=True, help="README path to write")
+<<<<<<< codex/complete-repository-population-with-documentation-7v2ieo
     parser.add_argument(
         "--artifact-map",
         default="sdlc_artifact_map.csv",
@@ -82,6 +83,10 @@ def main() -> None:
     updated = _replace_section(updated, "<!-- BEGIN:SDLC_TABLE -->", "<!-- END:SDLC_TABLE -->", sdlc_md)
     readme_path.write_text(updated, encoding="utf-8")
 
+=======
+    _ = parser.parse_args()
+    Path(_.output).touch()
+>>>>>>> main
 
 if __name__ == "__main__":
     main()
