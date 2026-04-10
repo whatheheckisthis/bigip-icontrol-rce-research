@@ -1,0 +1,9 @@
+phase,artefact,path,status
+Requirements,STRIDE threat model,sdlc/requirements/threat_model.md,Generated
+Requirements,ASVS requirements,sdlc/requirements/asvs_requirements.csv,Generated
+Design,Architecture doc,sdlc/design/architecture.md,Generated
+Design,Control design,sdlc/design/control_design.md,Generated
+Implementation,Changelog,sdlc/implementation/CHANGELOG.md,Maintained
+Verification,Test plan,sdlc/verification/test_plan.md,Generated
+Verification,ASVS test matrix,sdlc/verification/asvs_test_matrix.csv,Generated
+Release,Release checklist,sdlc/release/release_checklist.md,Generated

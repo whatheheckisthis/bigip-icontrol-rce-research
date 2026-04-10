@@ -1,0 +1,12 @@
+{
+  "name": "bigip-icontrol-rce-research",
+  "private": true,
+  "devDependencies": {
+    "grpc-tools": "1.13.0",
+    "protoc-gen-grpc-web": "1.5.0",
+    "ts-proto": "2.1.0"
+  },
+  "scripts": {
+    "proto:gen": "make proto-js"
+  }
+}
