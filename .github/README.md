@@ -1,4 +1,3 @@
-# bigip-icontrol-rce-research (BII-RR)
 
 <!-- 
 Repository : bigip-icontrol-rce-research
