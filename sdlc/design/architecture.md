@@ -1,14 +1,27 @@
 # Architecture Design
 
-<!--
-Repository : bigip-icontrol-rce-research
-Path       : sdlc/design/architecture.md
-Purpose    : Captures architecture boundaries and trust zones for all services
-Layer      : sdlc
-SDLC Phase : design
-ASVS Ref   : V1.1.2
-OWASP Ref  : A04
-Modified   : 2026-04-10
--->
+```mermaid
+graph TD
+  IngestionSvc --> EvidenceSvc
+  ControlSvc --> EvidenceSvc
+  IngestionSvc --> ReconcileSvc
+  ControlSvc --> ReconcileSvc
+  ReconcileSvc --> TraceSvc
+  TraceSvc --> fixture_target
+```
 
-Design enforces protobuf-only interfaces and service separation with local-only fixture exposure.
+## Service Responsibility Table
+
+| Service | Proto Contract | Port | Owns Data | Reads Data |
+|---|---|---:|---|---|
+| IngestionSvc | `proto/vulnerability.proto` | 50051 | CVE records, fingerprints | Reconciliation conflicts, evidence ACKs |
+| TraceSvc | `proto/exploit_trace.proto` | 50052 | ExploitTrace records | Fixture HTTP responses |
+| ControlSvc | `proto/control.proto` | 50053 | ASVS control registry | OWASP matrix, evidence ACKs |
+| EvidenceSvc | `proto/evidence.proto` | 50054 | Evidence ledger | Records from all services |
+| ReconcileSvc | `proto/reconciliation.proto` | 50055 | Conflict records, audit history | Vulnerability conflicts |
+
+## Data Lineage
+A raw NVD JSON object is parsed into `VulnerabilityRecord` (`cve_id`, `cvss_score`, `cvss_vector`, `affected_versions`, `ingestion_timestamp`) then fingerprinted (`fingerprint`). Clean ingests emit `EvidenceRecord` entries keyed by `content_hash`. Collisions emit `ConflictRecord` with field-level `ConflictDetail`; resolution creates audit entries and follow-up evidence.
+
+## Deduplication Design
+Fingerprint = SHA-256 of `cve_id + "|" + cvss_vector + "|" + "|".join(sorted(affected_versions))`. Duplicate fingerprints are skipped. Matching `cve_id` with differing fingerprints generate a conflict and trigger `SubmitConflict` into reconciliation with field-level deltas.

@@ -1,21 +1,11 @@
-# ============================================================
-# Repository : bigip-icontrol-rce-research
-# Path       : owasp_control_matrix.csv
-# Purpose    : OWASP Top 10 to ASVS control mapping with implementation status
-# Layer      : docs
-# SDLC Phase : verification
-# ASVS Ref   : V15.1
-# OWASP Ref  : all
-# Modified   : 2026-04-10
-# ============================================================
-owasp_category,owasp_id,asvs_control_id,asvs_description,implementation_location,implementation_status,test_coverage,notes
-Broken Access Control,A01,V4.1.1,Verify all access control decisions enforce least privilege,services/trace/server.py fixture URL validator,IMPLEMENTED,tests/asvs/test_asvs_controls.py,Interceptor rejects non-localhost fixture URLs
-Cryptographic Failures,A02,V9.2.1,Verify TLS used for all gRPC transport,docker-compose.yml TLS config,IN_PROGRESS,tests/asvs/test_asvs_controls.py,Certificate validation gap tracked in GAP-001
-Injection,A03,V5.2.3,Verify input validation prevents command injection,services/trace/capture.py,IMPLEMENTED,tests/asvs/test_asvs_controls.py,utilCmdArgs pattern checked against denylist
-Insecure Design,A04,V1.1.1,Threat model reviewed and integrated into design,sdlc/requirements/threat_model.md,IMPLEMENTED,tests/asvs/test_asvs_controls.py,Threat paths mapped in STRIDE table
-Security Misconfiguration,A05,V14.4.1,Verify no unnecessary ports exposed,docker-compose.yml network config,IMPLEMENTED,tests/asvs/test_asvs_controls.py,Internal network and localhost fixture binding
-Vulnerable Components,A06,V14.2.1,Verify dependencies tracked and audited,requirements.txt + make audit,IMPLEMENTED,tests/asvs/test_asvs_controls.py,pip-audit included in release gate
-Identification and Auth Failures,A07,V2.1.1,Verify authentication paths are not bypassable,services/trace/capture.py auth parsing,IMPLEMENTED,tests/asvs/test_asvs_controls.py,Both token and basic headers validated
-Software Integrity,A08,V10.2.1,Verify integrity of artefacts using hashing,services/evidence/hasher.py,IMPLEMENTED,tests/asvs/test_asvs_controls.py,SHA-256 fingerprint per evidence record
-Logging Failures,A09,V7.1.1,Verify security events are logged with sufficient detail,services/evidence/ledger.py,IMPLEMENTED,tests/asvs/test_asvs_controls.py,Append-only ledger with timestamp and actor
-SSRF,A10,V10.3.2,Verify server-side requests are validated against allowlist,services/trace/server.py,IMPLEMENTED,tests/asvs/test_asvs_controls.py,Regex allowlist enforced on fixture URL
+owasp_category,asvs_id,control_requirement,implementation_file,test_file
+A01,V4.1.1,Enforce access control checks before processing,services/trace/server.py,tests/asvs/test_a01_access_control.py
+A02,V6.2.1,Protect data in transit and avoid weak crypto assumptions,services/trace/replay.py,tests/asvs/test_a02_crypto.py
+A03,V5.2.3,Validate command-like input and block execution semantics,services/trace/capture.py,tests/asvs/test_a03_injection.py
+A04,V1.1.1,Document security architecture and trust boundaries,sdlc/design/architecture.md,tests/asvs/test_a04_design.py
+A05,V14.2.1,Enforce hardened security configuration defaults,services/trace/fixture_target.py,tests/asvs/test_a05_security_config.py
+A06,V1.14.4,Track and verify component inventory and versions,scripts/verify_tools.sh,tests/asvs/test_a06_vulnerable_components.py
+A07,V2.1.1,Enforce robust authentication and session handling,services/trace/server.py,tests/asvs/test_a07_auth.py
+A08,V7.1.1,Protect software and data integrity with immutable evidence,services/evidence/ledger.py,tests/asvs/test_a08_integrity.py
+A09,V7.2.1,Create tamper-resistant security logging and audit trail,services/reconciliation/audit_trail.py,tests/asvs/test_a09_logging.py
+A10,V10.3.2,Restrict server-side outbound targets to trusted destinations,services/trace/server.py,tests/asvs/test_a10_ssrf.py
