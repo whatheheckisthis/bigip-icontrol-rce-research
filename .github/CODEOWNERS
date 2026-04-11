@@ -1,0 +1,13 @@
+# All proto files require review — contract changes affect all services
+/proto/                     @whatheheckisthis
+
+# ASVS test files require review — control coverage is governance evidence
+/tests/asvs/                @whatheheckisthis
+
+# SDLC artefacts require review — these are the governance record
+/sdlc/                      @whatheheckisthis
+/owasp_control_matrix.csv   @whatheheckisthis
+/evidence_gap_register.csv  @whatheheckisthis
+
+# Release gate script requires review — changes affect make release behaviour
+/scripts/release_gate.py    @whatheheckisthis
