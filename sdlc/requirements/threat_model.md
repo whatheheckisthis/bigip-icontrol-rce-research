@@ -1,36 +1,44 @@
-# STRIDE Threat Model — CVE-2021-22986 Research Harness
+<!--
+Repository : bigip-icontrol-rce-research
+Path       : sdlc/requirements/threat_model.md
+Purpose    : Captures STRIDE threats and mapped mitigations for the research harness.
+Layer      : sdlc
+SDLC Phase : requirements
+ASVS Ref   : V1.1.1,V2.1.1,V5.2.3,V7.1.1,V9.2.1
+OWASP Ref  : A02,A03,A04,A07,A09
+Modified   : 2026-04-11
+-->
+# Spoofing
+Threat: Unauthenticated token extraction on `/mgmt/shared/authn/login`.
+Affected component: `services/trace/fixture_target.py`.
+Likelihood: H.
+Impact: H.
+Mitigation: V2.1.1 (A07).
 
-## Spoofing
-- **Threat description:** unauthenticated token extraction via `/mgmt/shared/authn/login` allows attacker session spoofing.
-- **Affected component:** `services/trace/fixture_target.py` login endpoint.
-- **Likelihood:** High.
-- **Impact:** High.
-- **Mitigation:** `V2.1.1` and `V4.1.1` controls with pre-processing guardrails.
+# Tampering
+Threat: `utilCmdArgs` injection patterns on `/mgmt/tm/util/bash`.
+Affected component: `services/trace/capture.py`.
+Likelihood: H.
+Impact: H.
+Mitigation: V5.2.3 (A03).
 
-## Tampering
-- **Threat description:** `utilCmdArgs` injection attempts to alter system behavior via `/mgmt/tm/util/bash`.
-- **Affected component:** trace capture and fixture bash endpoint.
-- **Likelihood:** High.
-- **Impact:** High.
-- **Mitigation:** `V5.2.3` input handling; fixture returns synthetic output only.
+# Repudiation
+Threat: Missing audit trail on management port 5001 actions.
+Affected component: `services/evidence/ledger.py`.
+Likelihood: M.
+Impact: H.
+Mitigation: V7.1.1 (A09) — append-only ledger.
 
-## Repudiation
-- **Threat description:** management plane events can be denied without immutable audit.
-- **Affected component:** evidence and reconciliation mutation history.
-- **Likelihood:** Medium.
-- **Impact:** High.
-- **Mitigation:** append-only ledger and audit trail (`V7.1.1`, `V7.2.1`).
+# Information Disclosure
+Threat: Token `selfLink` appears in plaintext response body.
+Affected component: `services/trace/fixture_target.py`.
+Likelihood: M.
+Impact: M.
+Mitigation: V9.2.1 (A02).
 
-## Information Disclosure
-- **Threat description:** token selfLink in response body discloses authentication token path.
-- **Affected component:** fixture response and trace persistence.
-- **Likelihood:** Medium.
-- **Impact:** Medium.
-- **Mitigation:** localhost fixture boundary and synthetic token artefacts (`V6.2.1`).
-
-## Elevation of Privilege
-- **Threat description:** Basic auth bypass pattern (empty `X-F5-Auth-Token` plus Basic header) implies root-level endpoint access in vulnerable products.
-- **Affected component:** auth-path classification in trace service.
-- **Likelihood:** High.
-- **Impact:** High.
-- **Mitigation:** ASVS authentication and SSRF restrictions (`V2.1.1`, `V10.3.2`).
+# Elevation
+Threat: Basic auth bypass with empty `X-F5-Auth-Token` header.
+Affected component: `services/trace/capture.py` and `services/trace/server.py`.
+Likelihood: H.
+Impact: H.
+Mitigation: V2.1.1 (A07), V4.1.1 (A01).

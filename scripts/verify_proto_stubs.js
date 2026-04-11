@@ -1,21 +1,24 @@
 #!/usr/bin/env node
-const fs = require('node:fs');
-const path = require('node:path');
-const repo = process.cwd();
-const protoDir = path.join(repo, 'proto');
-const genDir = path.join(repo, 'generated');
-const protos = fs.readdirSync(protoDir).filter(f => f.endsWith('.proto'));
+// Repository : bigip-icontrol-rce-research
+// Path       : scripts/verify_proto_stubs.js
+// Purpose    : Asserts generated Python gRPC stub files exist for each contract.
+// Layer      : scripts
+// SDLC Phase : verification
+// ASVS Ref   : V14.2.1
+// OWASP Ref  : A06
+// Modified   : 2026-04-11
+const fs = require("fs");
+const path = require("path");
+const protos = ["vulnerability_v1", "exploit_trace_v1", "control_v1", "evidence_v1", "reconciliation_v1"];
 const missing = [];
-for (const proto of protos) {
-  const base = proto.replace('.proto', '');
-  for (const suffix of ['_pb2.py','_pb2_grpc.py']) {
-    const expected = path.join(genDir, `${base}${suffix}`);
-    if (!fs.existsSync(expected)) missing.push(path.relative(repo, expected));
+for (const p of protos) {
+  for (const suffix of ["_pb2.py", "_pb2_grpc.py"]) {
+    const f = path.join("generated", p + suffix);
+    if (!fs.existsSync(f)) missing.push(f);
   }
 }
 if (missing.length) {
-  console.error('Missing generated stubs:');
-  for (const m of missing) console.error(` - ${m}`);
+  console.error(`[FAIL] missing stubs:\n${missing.join("\n")}`);
   process.exit(1);
 }
-console.log('[OK] proto stubs are present');
+console.log("[OK] all proto stubs present");

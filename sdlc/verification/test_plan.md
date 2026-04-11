@@ -1,27 +1,26 @@
-# Verification Test Plan
+<!--
+Repository : bigip-icontrol-rce-research
+Path       : sdlc/verification/test_plan.md
+Purpose    : Defines verification strategy and boundaries for the research harness.
+Layer      : sdlc
+SDLC Phase : verification
+ASVS Ref   : N/A
+OWASP Ref  : N/A
+Modified   : 2026-04-11
+-->
+# Scope
+Validate proto contracts, service logic, and OWASP/ASVS control assertions.
 
-## Scope
-Testing uses only `tests/fixtures/exploit_trace_vectors.json` fixtures and synthetic services; no live F5 device interaction.
+# Entry Criteria
+Generated stubs are current, dependencies installed, and services build cleanly.
 
-## Entry Criteria
-- `make proto` exits 0.
-- `npm run build` exits 0.
-- `docker compose` stack reports healthy services.
+# Exit Criteria
+Unit, integration, and ASVS suites pass and release gate checks are green.
 
-## Exit Criteria
-- All unit tests pass.
-- All ASVS tests pass.
-- `make audit` exits 0.
-- `sdlc/verification/asvs_test_matrix.csv` updated with latest results.
+# Test Categories
+- unit
+- integration
+- asvs
 
-## Test Categories
-**Unit:** validates parser, deduplication, hashing, and serialisation logic with deterministic fixtures.
-
-**Integration:** validates cross-service flows from ingestion through reconciliation and evidence registration.
-
-**ASVS:** validates control behavior with explicit `@pytest.mark.asvs` mappings and fixture vectors.
-
-## Out of Scope
-- Live exploitation of production F5 devices.
-- SIEM integration.
-- Alert triage workflows.
+# Out of Scope
+live exploitation, SIEM integration, reverse shells, file writes, any payload beyond pattern-extraction test vectors.

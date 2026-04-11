@@ -1,11 +1,19 @@
-owasp_category,asvs_id,control_requirement,implementation_file,test_file
-A01,V4.1.1,Enforce access control checks before processing,services/trace/server.py,tests/asvs/test_a01_access_control.py
-A02,V6.2.1,Protect data in transit and avoid weak crypto assumptions,services/trace/replay.py,tests/asvs/test_a02_crypto.py
-A03,V5.2.3,Validate command-like input and block execution semantics,services/trace/capture.py,tests/asvs/test_a03_injection.py
-A04,V1.1.1,Document security architecture and trust boundaries,sdlc/design/architecture.md,tests/asvs/test_a04_design.py
-A05,V14.2.1,Enforce hardened security configuration defaults,services/trace/fixture_target.py,tests/asvs/test_a05_security_config.py
-A06,V1.14.4,Track and verify component inventory and versions,scripts/verify_tools.sh,tests/asvs/test_a06_vulnerable_components.py
-A07,V2.1.1,Enforce robust authentication and session handling,services/trace/server.py,tests/asvs/test_a07_auth.py
-A08,V7.1.1,Protect software and data integrity with immutable evidence,services/evidence/ledger.py,tests/asvs/test_a08_integrity.py
-A09,V7.2.1,Create tamper-resistant security logging and audit trail,services/reconciliation/audit_trail.py,tests/asvs/test_a09_logging.py
-A10,V10.3.2,Restrict server-side outbound targets to trusted destinations,services/trace/server.py,tests/asvs/test_a10_ssrf.py
+# Repository : bigip-icontrol-rce-research
+# Path       : owasp_control_matrix.csv
+# Purpose    : Crosswalks OWASP Top 10 controls to ASVS and implementation locations.
+# Layer      : config
+# SDLC Phase : release
+# ASVS Ref   : V1.1.1
+# OWASP Ref  : A01-A10
+# Modified   : 2026-04-11
+owasp_category,owasp_id,asvs_control_id,asvs_description,implementation_location,implementation_status,test_coverage,notes
+A01,A01,V4.1.1,Restrict endpoint access,services/trace/server.py,IMPLEMENTED,tests/asvs/test_a01_access_control.py,
+A02,A02,V9.2.1,Protect data in transit,docker-compose.yml,IN_PROGRESS,tests/asvs/test_a02_crypto.py,GAP-001
+A03,A03,V5.2.3,Prevent command injection,services/trace/capture.py,IMPLEMENTED,tests/asvs/test_a03_injection.py,
+A04,A04,V1.1.1,Adopt secure design,sdlc/requirements/threat_model.md,IMPLEMENTED,tests/asvs/test_a04_design.py,
+A05,A05,V14.4.1,Harden secure defaults,docker-compose.yml,IMPLEMENTED,tests/asvs/test_a05_misconfig.py,
+A06,A06,V14.2.1,Manage component risk,requirements.txt,IMPLEMENTED,tests/asvs/test_a06_components.py,
+A07,A07,V2.1.1,Verify authentication paths,services/trace/capture.py,IMPLEMENTED,tests/asvs/test_a07_auth.py,
+A08,A08,V10.2.1,Ensure integrity evidence,services/evidence/hasher.py,IMPLEMENTED,tests/asvs/test_a08_integrity.py,
+A09,A09,V7.1.1,Enable append-only logging,services/evidence/ledger.py,IMPLEMENTED,tests/asvs/test_a09_logging.py,
+A10,A10,V10.3.2,Reject SSRF targets,services/trace/server.py,IMPLEMENTED,tests/asvs/test_a10_ssrf.py,

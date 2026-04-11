@@ -1,43 +1,50 @@
-// SPDX-License-Identifier: MIT
-// Generated for bigip-icontrol-rce-research
+// Repository : bigip-icontrol-rce-research
+// Path       : proto/control.proto
+// Purpose    : Defines ASVS control registration and status contracts.
+// Layer      : proto
+// SDLC Phase : design
+// ASVS Ref   : V1.1.1,V7.1.1
+// OWASP Ref  : A04,A09
+// Modified   : 2026-04-11
 syntax = "proto3";
+
 package control.v1;
-option python_package = "generated.control_v1";
 
 enum ImplementationStatus {
-  NOT_STARTED  = 0;
-  IN_PROGRESS  = 1;
-  IMPLEMENTED  = 2;
-  VERIFIED     = 3;
+  NOT_STARTED = 0;
+  IN_PROGRESS = 1;
+  IMPLEMENTED = 2;
+  VERIFIED = 3;
 }
 
 message ControlRecord {
-  string control_id            = 1;
-  string owasp_category        = 2;
-  string description           = 3;
-  ImplementationStatus status  = 4;
+  string control_id = 1;
+  string owasp_category = 2;
+  string description = 3;
+  ImplementationStatus status = 4;
   repeated string evidence_refs = 5;
-  int64  last_verified_timestamp = 6;
+  int64 last_verified_timestamp = 6;
 }
 
-message RegisterControlRequest  { ControlRecord control = 1; }
-message RegisterControlResponse { string control_id = 1; }
+message RegisterControlRequest { ControlRecord record = 1; }
+message RegisterControlResponse { ControlRecord record = 1; string evidence_id = 2; }
 message UpdateStatusRequest {
-  string control_id          = 1;
+  string control_id = 1;
   ImplementationStatus status = 2;
-  string evidence_ref        = 3;
+  string evidence_ref = 3;
+  int64 verified_timestamp = 4;
 }
-message UpdateStatusResponse    { ControlRecord updated = 1; }
-message GetControlRequest       { string control_id = 1; }
-message ListByOWASPRequest      { string owasp_category = 1; }
-message ListByOWASPResponse     { repeated ControlRecord controls = 1; }
-message ExportControlMatrixRequest  {}
+message UpdateStatusResponse { ControlRecord record = 1; string evidence_id = 2; }
+message GetControlRequest { string control_id = 1; }
+message ListByOWASPRequest { string owasp_category = 1; }
+message ListByOWASPResponse { repeated ControlRecord records = 1; }
+message ExportControlMatrixRequest {}
 message ExportControlMatrixResponse { bytes csv_content = 1; }
 
 service ControlService {
-  rpc RegisterControl       (RegisterControlRequest)       returns (RegisterControlResponse);
-  rpc UpdateStatus          (UpdateStatusRequest)          returns (UpdateStatusResponse);
-  rpc GetControl            (GetControlRequest)            returns (ControlRecord);
-  rpc ListByOWASPCategory   (ListByOWASPRequest)           returns (ListByOWASPResponse);
-  rpc ExportControlMatrix   (ExportControlMatrixRequest)   returns (ExportControlMatrixResponse);
+  rpc RegisterControl(RegisterControlRequest) returns (RegisterControlResponse);
+  rpc UpdateStatus(UpdateStatusRequest) returns (UpdateStatusResponse);
+  rpc GetControl(GetControlRequest) returns (ControlRecord);
+  rpc ListByOWASPCategory(ListByOWASPRequest) returns (ListByOWASPResponse);
+  rpc ExportControlMatrix(ExportControlMatrixRequest) returns (ExportControlMatrixResponse);
 }

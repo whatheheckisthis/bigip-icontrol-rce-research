@@ -1,20 +1,15 @@
-# ============================================================
 # Repository : bigip-icontrol-rce-research
 # Path       : .github/workflows/ci.yml
-# Purpose    : CI pipeline for linting, audit, unit tests, and ASVS verification
+# Purpose    : Defines CI gates for lint, audit, unit, and ASVS stages.
 # Layer      : config
 # SDLC Phase : verification
-# ASVS Ref   : V14.2, V14.3
-# OWASP Ref  : A06, A08
-# Modified   : 2026-04-10
-# ============================================================
+# ASVS Ref   : N/A
+# OWASP Ref  : N/A
+# Modified   : 2026-04-11
 name: CI
-
 on:
-  push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main]
+  push:    { branches: [main, dev] }
+  pull_request: { branches: [main] }
 
 jobs:
   lint:
@@ -35,7 +30,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: make audit
 
-  unit-tests:
+  unit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,10 +39,11 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: make proto
       - run: pytest -m unit --cov=services --cov-report=xml
+      - uses: codecov/codecov-action@v4
 
   asvs:
     runs-on: ubuntu-latest
-    needs: [lint, audit, unit-tests]
+    needs: [lint, audit, unit]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -55,6 +51,7 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: make proto
       - run: make services-detach
+      - run: sleep 10
       - run: make asvs
       - uses: actions/upload-artifact@v4
         with:

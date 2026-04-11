@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# ============================================================
 # Repository : bigip-icontrol-rce-research
 # Path       : scripts/proto_js.sh
-# Purpose    : Compiles proto files into JavaScript/TypeScript stubs when Node toolchain is installed
-# Layer      : sdlc
+# Purpose    : Placeholder script for Node proto generation pipeline integration.
+# Layer      : scripts
 # SDLC Phase : implementation
-# ASVS Ref   : V14.2
-# OWASP Ref  : A06
-# Modified   : 2026-04-10
-# ============================================================
+# ASVS Ref   : N/A
+# OWASP Ref  : N/A
+# Modified   : 2026-04-11
 set -euo pipefail
-echo "proto-js generation placeholder implementation with documented behavior"
+echo "JS proto generation not required for Python stubs in this repository."
