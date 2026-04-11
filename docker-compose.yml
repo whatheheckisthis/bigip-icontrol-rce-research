@@ -1,80 +1,61 @@
-# ============================================================
 # Repository : bigip-icontrol-rce-research
 # Path       : docker-compose.yml
-# Purpose    : Service orchestration for all gRPC components and fixture target
+# Purpose    : Defines multi-service local stack and isolated research network.
 # Layer      : config
-# SDLC Phase : implementation
-# ASVS Ref   : V14.4, V14.5
-# OWASP Ref  : A05
-# Modified   : 2026-04-10
-# ============================================================
-
+# SDLC Phase : release
+# ASVS Ref   : V4.1.1,V14.4.1
+# OWASP Ref  : A01,A05
+# Modified   : 2026-04-11
 version: "3.9"
-
 networks:
   research_internal:
     driver: bridge
     internal: true
-
 services:
   ingestion:
     build: ./services/ingestion
     ports: ["50051:50051"]
     networks: [research_internal]
-    environment:
-      GRPC_PORT: "50051"
-      LOG_LEVEL: "INFO"
-    volumes:
-      - ./generated:/app/generated:ro
-      - evidence_ledger:/app/data
-
+    environment: { GRPC_PORT: "50051", LOG_LEVEL: "INFO", TLS_CREDENTIALS: "/app/tls/ingestion.pem" }
+    volumes: ["./generated:/app/generated:ro", "evidence_ledger:/app/data"]
   trace:
     build: ./services/trace
     ports: ["50052:50052"]
     networks: [research_internal]
     environment:
       GRPC_PORT: "50052"
-      FIXTURE_URL_PATTERN: "^https?://(127\\.|localhost)"
-    volumes:
-      - ./generated:/app/generated:ro
-
+      FIXTURE_URL_PATTERN: "^https?://(127\.|localhost)"
+      TLS_CREDENTIALS: "/app/tls/trace.pem"
+    volumes: ["./generated:/app/generated:ro"]
   control:
     build: ./services/control
     ports: ["50053:50053"]
     networks: [research_internal]
     environment:
       GRPC_PORT: "50053"
+      ASVS_MANIFEST_PATH: "/app/sdlc/requirements/asvs_requirements.csv"
+      TLS_CREDENTIALS: "/app/tls/control.pem"
     volumes:
-      - ./generated:/app/generated:ro
-
+      - "./generated:/app/generated:ro"
+      - "./sdlc:/app/sdlc:ro"
   evidence:
     build: ./services/evidence
     ports: ["50054:50054"]
     networks: [research_internal]
-    environment:
-      GRPC_PORT: "50054"
-      LEDGER_PATH: "/app/data/ledger.db"
-    volumes:
-      - ./generated:/app/generated:ro
-      - evidence_ledger:/app/data
-
+    environment: { GRPC_PORT: "50054", LEDGER_PATH: "/app/data/ledger.db", TLS_CREDENTIALS: "/app/tls/evidence.pem" }
+    volumes: ["./generated:/app/generated:ro", "evidence_ledger:/app/data"]
   reconciliation:
     build: ./services/reconciliation
     ports: ["50055:50055"]
     networks: [research_internal]
-    environment:
-      GRPC_PORT: "50055"
-    volumes:
-      - ./generated:/app/generated:ro
-
+    environment: { GRPC_PORT: "50055", TLS_CREDENTIALS: "/app/tls/reconciliation.pem" }
+    volumes: ["./generated:/app/generated:ro"]
   fixture_target:
     build: ./services/trace
-    command: uvicorn fixture_target:app --host 127.0.0.1 --port 8080
+    command: python fixture_target.py
     ports: ["127.0.0.1:8080:8080"]
     networks: [research_internal]
-    environment:
-      FIXTURE_MODE: "true"
-
+    environment: { FIXTURE_MODE: "true" }
 volumes:
   evidence_ledger:
     driver: local

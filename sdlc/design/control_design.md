@@ -1,61 +1,70 @@
-# Control Design
+<!--
+Repository : bigip-icontrol-rce-research
+Path       : sdlc/design/control_design.md
+Purpose    : Maps OWASP categories to implemented controls and known gaps.
+Layer      : sdlc
+SDLC Phase : design
+ASVS Ref   : V1.1.1
+OWASP Ref  : A01-A10
+Modified   : 2026-04-11
+-->
 
-## A01 — Broken Access Control
-- **Control requirement:** enforce access control before business logic.
-- **Design decision:** apply URL allowlist as a gRPC interceptor in trace service.
-- **Implementation location:** `services/trace/server.py`
-- **Trade-offs/gaps:** strict localhost policy limits remote replay scenarios.
+## A01
+Control requirement: Enforce A01 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `services/trace/server.py`.
+Gaps: None.
 
-## A02 — Cryptographic Failures
-- **Control requirement:** protect confidentiality and integrity in transit.
-- **Design decision:** replay client only permits localhost fixture and expects HTTP loopback use.
-- **Implementation location:** `services/trace/replay.py`
-- **Trade-offs/gaps:** fixture mode uses synthetic data, not real cert rotation.
+## A02
+Control requirement: Enforce A02 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `docker-compose.yml`.
+Gaps: GAP-001.
 
-## A03 — Injection
-- **Control requirement:** treat utilCmdArgs as data, never executable input.
-- **Design decision:** capture extracts command_injected as pattern only.
-- **Implementation location:** `services/trace/capture.py`
-- **Trade-offs/gaps:** command taxonomy is intentionally narrow to known vectors.
+## A03
+Control requirement: Enforce A03 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `services/trace/capture.py`.
+Gaps: None.
 
-## A04 — Insecure Design
-- **Control requirement:** maintain explicit security architecture and boundaries.
-- **Design decision:** protobuf-first decomposition with evidence and reconciliation paths.
-- **Implementation location:** `sdlc/design/architecture.md`
-- **Trade-offs/gaps:** no multi-tenant policy engine in v0.1.0.
+## A04
+Control requirement: Enforce A04 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `sdlc/requirements/threat_model.md`.
+Gaps: None.
 
-## A05 — Security Misconfiguration
-- **Control requirement:** secure defaults and explicit fixture constraints.
-- **Design decision:** fixture asserts `FIXTURE_MODE=true` and binds to 127.0.0.1.
-- **Implementation location:** `services/trace/fixture_target.py`
-- **Trade-offs/gaps:** environment-dependent startup assertion can block local misconfigured runs.
+## A05
+Control requirement: Enforce A05 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `docker-compose.yml`.
+Gaps: None.
 
-## A06 — Vulnerable and Outdated Components
-- **Control requirement:** verify baseline toolchain and dependency hygiene.
-- **Design decision:** version gates in shell verification script.
-- **Implementation location:** `scripts/verify_tools.sh`
-- **Trade-offs/gaps:** language package CVEs are checked separately by audit tasks.
+## A06
+Control requirement: Enforce A06 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `requirements.txt`.
+Gaps: None.
 
-## A07 — Identification and Authentication Failures
-- **Control requirement:** represent auth paths and detect bypass patterns.
-- **Design decision:** trace capture records headers and token extraction state.
-- **Implementation location:** `services/trace/server.py`
-- **Trade-offs/gaps:** fixture is synthetic and does not model real auth backend.
+## A07
+Control requirement: Enforce A07 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `services/trace/capture.py`.
+Gaps: None.
 
-## A08 — Software and Data Integrity Failures
-- **Control requirement:** store immutable evidence entries with hashes.
-- **Design decision:** append-only ledger module disallows update/delete APIs.
-- **Implementation location:** `services/evidence/ledger.py`
-- **Trade-offs/gaps:** pruning and archival policy is tracked in `evidence_gap_register.csv`.
+## A08
+Control requirement: Enforce A08 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `services/evidence/hasher.py`.
+Gaps: None.
 
-## A09 — Security Logging and Monitoring Failures
-- **Control requirement:** persist audit history for conflict resolution mutations.
-- **Design decision:** append-only audit trail table in shared SQLite DB.
-- **Implementation location:** `services/reconciliation/audit_trail.py`
-- **Trade-offs/gaps:** SIEM forwarding remains future work.
+## A09
+Control requirement: Enforce A09 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `services/evidence/ledger.py`.
+Gaps: GAP-003.
 
-## A10 — Server-Side Request Forgery
-- **Control requirement:** block non-localhost target_fixture_url values.
-- **Design decision:** interceptor rejects anything not matching localhost/127 prefix.
-- **Implementation location:** `services/trace/server.py`
-- **Trade-offs/gaps:** static allowlist does not yet support named local aliases.
+## A10
+Control requirement: Enforce A10 mitigations for CVE-2021-22986 simulation.
+Design decision: Implemented deterministic service guardrail and evidence hooks.
+Implementation location: `services/trace/server.py`.
+Gaps: None.

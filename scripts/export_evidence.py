@@ -1,19 +1,19 @@
-#!/usr/bin/env python3
-import argparse
-import json
-import os
-from pathlib import Path
+# Repository : bigip-icontrol-rce-research
+# Path       : scripts/export_evidence.py
+# Purpose    : Exports evidence ledger rows into verification artifacts.
+# Layer      : scripts
+# SDLC Phase : verification
+# ASVS Ref   : V10.2.1
+# OWASP Ref  : A08
+# Modified   : 2026-04-11
+import argparse, json, os
+os.environ.setdefault("LEDGER_PATH","/tmp/release-ledger.db")
+from services.evidence.ledger import Ledger
 
+def main():
+    ap=argparse.ArgumentParser(); ap.add_argument("--output",required=True); args=ap.parse_args()
+    with open(args.output,"w",encoding="utf-8") as f:
+        json.dump(Ledger().export_all(),f,indent=2)
 
-def run(output: str):
-    host = os.environ.get("EVIDENCE_GRPC_HOST", "localhost")
-    port = int(os.environ.get("EVIDENCE_GRPC_PORT", "50054"))
-    payload = {"endpoint": f"{host}:{port}", "records": []}
-    Path(output).write_text(json.dumps(payload, indent=2))
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--output", default="sdlc/verification/evidence_ledger_export.json")
-    args = parser.parse_args()
-    run(args.output)
+if __name__=="__main__":
+    main()

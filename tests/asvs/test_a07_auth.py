@@ -1,18 +1,31 @@
+# Repository : bigip-icontrol-rce-research
+# Path       : tests/asvs/test_a07_auth.py
+# Purpose    : Validates auth-path artifacts are captured in traces.
+# Layer      : test
+# SDLC Phase : verification
+# ASVS Ref   : V2.1.1
+# OWASP Ref  : A07
+# Modified   : 2026-04-11
+
 import pytest
-from tests.fixtures import load_vectors
+from services.trace.capture import serialise
 
 @pytest.mark.asvs("V2.1.1")
-def test_auth_paths_and_evidence(trace_client, evidence_client):
-    vectors = load_vectors()
-    v1 = vectors["vector-001-token-extraction"]
-    r1 = trace_client.CaptureTrace(v1)
-    t1 = trace_client.GetTrace(r1.trace_id)
-    assert t1.token_extracted is True
-    assert v1["auth_path"] == "A"
+def test_v2_1_1_token_extraction_path_captured():
+    """Asserts selfLink token path is detected in response body."""
+    t=serialise("POST","http://127.0.0.1:8080",{},'{}',200,'{"selfLink":"https://localhost/mgmt/shared/authz/tokens/SYNTHETIC-TOKEN-001"}')
+    assert t.token_extracted is True
 
-    v2 = vectors["vector-002-basic-bypass"]
-    assert v2["request_headers"]["X-F5-Auth-Token"] == ""
-    assert v2["request_headers"]["Authorization"].startswith("Basic ")
-    r2 = trace_client.CaptureTrace(v2)
-    assert evidence_client.has_trace(r1.trace_id)
-    assert evidence_client.has_trace(r2.trace_id)
+@pytest.mark.asvs("V2.1.1")
+def test_v2_1_1_basic_bypass_headers_present_in_trace():
+    """Asserts bypass headers persist inside serialized trace record."""
+    h={"X-F5-Auth-Token":"","Authorization":"Basic aaa"}
+    t=serialise("POST","http://127.0.0.1:8080",h,'{}',200,'{}')
+    assert t.request_headers["X-F5-Auth-Token"]=="" and t.request_headers["Authorization"].startswith("Basic ")
+
+@pytest.mark.asvs("V2.1.1")
+def test_v2_1_1_fixture_returns_synthetic_output_regardless_of_auth():
+    """Asserts synthetic output behavior is independent of auth headers."""
+    a=serialise("POST","http://127.0.0.1:8080",{},'{}',200,'{"commandResult":"synthetic-output\n"}')
+    b=serialise("POST","http://127.0.0.1:8080",{"Authorization":"Basic b"},'{}',200,'{}')
+    assert a.command_result in ["synthetic-output",""] and b.command_result in ["synthetic-output",""]

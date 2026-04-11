@@ -1,12 +1,45 @@
 {
-  "name": "bigip-icontrol-rce-research",
-  "private": true,
-  "devDependencies": {
-    "grpc-tools": "1.13.0",
-    "protoc-gen-grpc-web": "1.5.0",
-    "ts-proto": "2.1.0"
+  "_header": {
+    "Repository": "bigip-icontrol-rce-research",
+    "Path": "package.json",
+    "Purpose": "Defines Node-based verification and proto helper scripts.",
+    "Layer": "config",
+    "SDLC Phase": "implementation",
+    "ASVS Ref": "V14.2.1",
+    "OWASP Ref": "A06",
+    "Modified": "2026-04-11"
   },
+  "name": "bigip-icontrol-rce-research",
+  "version": "0.1.0",
+  "private": true,
+  "engines": { "node": ">=20.0.0", "npm": ">=10.0.0" },
   "scripts": {
-    "proto:gen": "make proto-js"
+    "prebuild": "npm run verify:tools",
+    "build": "npm run proto:gen && npm run lint",
+    "postbuild": "npm run proto:check",
+    "proto:gen": "scripts/proto_js.sh",
+    "proto:check": "node scripts/verify_proto_stubs.js",
+    "lint": "eslint 'scripts/**/*.{js,ts}' --max-warnings 0",
+    "lint:fix": "eslint 'scripts/**/*.{js,ts}' --fix",
+    "format": "prettier --write 'scripts/**/*.{js,ts,json}'",
+    "format:check": "prettier --check 'scripts/**/*.{js,ts,json}'",
+    "verify:tools": "node scripts/verify_tools.js",
+    "verify:versions": "node scripts/verify_versions.js",
+    "test": "node --test scripts/**/*.test.js",
+    "audit:deps": "npm audit --audit-level=high",
+    "audit:licenses": "license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC'",
+    "clean": "rimraf generated/js generated/ts",
+    "clean:all": "npm run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "20.12.7",
+    "eslint": "9.1.1",
+    "grpc-tools": "1.12.4",
+    "license-checker": "25.0.1",
+    "prettier": "3.2.5",
+    "protoc-gen-grpc-web": "1.5.0",
+    "rimraf": "5.0.5",
+    "ts-proto": "1.169.0",
+    "typescript": "5.4.5"
   }
 }

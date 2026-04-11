@@ -1,11 +1,19 @@
-asvs_id,category,requirement_text,applicable_to_this_cve,rationale
-V1.1.1,Architecture,Define and maintain security architecture and trust boundaries,true,CVE-2021-22986 analysis needs explicit boundaries between fixture and services.
-V1.14.4,Architecture,Inventory and verify platform component versions,true,Toolchain drift can invalidate reproducibility of security evidence.
-V2.1.1,Authentication,Verify authentication controls and session handling,true,CVE chain includes token extraction and auth bypass patterns.
-V4.1.1,Access Control,Enforce authorization decisions before protected actions,true,SSRF allowlist should run before trace processing.
-V5.2.3,Validation,Validate and constrain OS-command style input,true,utilCmdArgs payload carries injection-like patterns.
-V6.2.1,Cryptography,Use strong transport and cryptographic controls,true,Replay and fixture transport boundaries must be explicit.
-V7.1.1,Data Integrity,Protect logs and evidence integrity,true,Research outputs require tamper-evident evidence storage.
-V7.2.1,Logging,Record security-relevant events with provenance,true,Conflict resolution needs immutable auditability.
-V10.3.2,SSRF,Restrict outbound requests to trusted destinations,true,Trace replay must only target localhost fixture.
-V14.2.1,Configuration,Apply secure baseline configuration,true,Fixture mode and localhost binding are mandatory hardening controls.
+# Repository : bigip-icontrol-rce-research
+# Path       : sdlc/requirements/asvs_requirements.csv
+# Purpose    : Defines ASVS requirements applicability for CVE-2021-22986 research.
+# Layer      : sdlc
+# SDLC Phase : requirements
+# ASVS Ref   : V1.1.1,V14.4.1
+# OWASP Ref  : A01-A10
+# Modified   : 2026-04-11
+asvs_id,owasp_category,description,requirement_text,applicable_to_this_cve,rationale
+V4.1.1,A01,Restrict sensitive endpoints,Allow only localhost fixture targets,true,Prevents SSRF pivot during CVE trace replay.
+V9.2.1,A02,Protect data in transit,Configure TLS credentials for gRPC services,true,Mitigates interception of control-plane evidence traffic.
+V5.2.3,A03,Prevent command injection,Never execute utilCmdArgs content,true,Core CVE behavior is pattern extraction not command execution.
+V1.1.1,A04,Secure-by-design process,Maintain threat model and control design,true,CVE simulation requires explicit design boundaries.
+V14.4.1,A05,Secure defaults,Bind fixture to 127.0.0.1 only,true,Removes unintended exposure of simulated vulnerable endpoint.
+V14.2.1,A06,Component hygiene,Pin dependencies and audit regularly,true,Limits vulnerable dependency drift in harness runtime.
+V2.1.1,A07,Authentication controls,Capture auth bypass telemetry,true,CVE exploit path includes authentication weaknesses.
+V10.2.1,A08,Integrity controls,Hash evidence and traces,true,Ensures captured exploit artifacts are tamper evident.
+V7.1.1,A09,Logging controls,Maintain append-only audit trail,true,Supports forensic reconstruction of simulated events.
+V10.3.2,A10,SSRF controls,Reject non-localhost destinations,true,Prevents trace replay against external hosts.

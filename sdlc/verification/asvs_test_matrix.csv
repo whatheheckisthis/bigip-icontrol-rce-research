@@ -1,13 +1,10 @@
-# ============================================================
 # Repository : bigip-icontrol-rce-research
 # Path       : sdlc/verification/asvs_test_matrix.csv
-# Purpose    : Captures latest ASVS test outcomes for release gate checks
+# Purpose    : Stores latest ASVS test result summary for release gating.
 # Layer      : sdlc
 # SDLC Phase : verification
-# ASVS Ref   : V15.2
-# OWASP Ref  : all
-# Modified   : 2026-04-10
-# ============================================================
-control_id,test_name,status
-V5.2.3,test_v5_2_3_input_validation,PASS
-V10.3.2,test_v10_3_2_allowlist,PASS
+# ASVS Ref   : N/A
+# OWASP Ref  : N/A
+# Modified   : 2026-04-11
+test,status
+tests/asvs/test_a01_access_control.py::test_v4_1_1_allowlist_blocks_non_localhost_url,passed

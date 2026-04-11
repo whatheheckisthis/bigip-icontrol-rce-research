@@ -1,4 +1,12 @@
-gap_id,severity,status,description,owner,due_date
-GAP-001,HIGH,OPEN,Automate SIEM forwarding for audit trail events,security-ops,2026-05-15
-GAP-002,MEDIUM,OPEN,Add signed artefact export for external attestations,platform-eng,2026-06-01
-GAP-003,LOW,OPEN,Expand fixture variants for additional auth edge cases,qa-eng,2026-06-20
+# Repository : bigip-icontrol-rce-research
+# Path       : evidence_gap_register.csv
+# Purpose    : Tracks outstanding control gaps discovered during verification.
+# Layer      : config
+# SDLC Phase : release
+# ASVS Ref   : V9.2.1
+# OWASP Ref  : A02
+# Modified   : 2026-04-11
+gap_id,severity,title,description,owner,due_date,status,asvs_ref,owasp_ref,evidence_ref
+GAP-001,HIGH,TLS verification incomplete,End-to-end certificate chain validation is not yet automated,unassigned,2026-06-30,OPEN,V9.2.1,A02,sdlc/design/control_design.md
+GAP-002,MEDIUM,ASVS V13.2.1 test not yet written,Control coverage expansion is pending for future increment,unassigned,2026-07-15,OPEN,V13.2.1,A06,sdlc/verification/test_plan.md
+GAP-003,LOW,MANUAL resolution has no operator notification surface,Conflict manual path lacks user-facing alerting workflow,unassigned,2026-08-01,OPEN,V7.1.1,A09,services/reconciliation/server.py

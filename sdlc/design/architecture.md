@@ -1,27 +1,35 @@
-# Architecture Design
-
+<!--
+Repository : bigip-icontrol-rce-research
+Path       : sdlc/design/architecture.md
+Purpose    : Documents topology, data lineage, and deduplication architecture decisions.
+Layer      : sdlc
+SDLC Phase : design
+ASVS Ref   : V1.1.1
+OWASP Ref  : A04
+Modified   : 2026-04-11
+-->
+# 1. Service topology
 ```mermaid
 graph TD
-  IngestionSvc --> EvidenceSvc
-  ControlSvc --> EvidenceSvc
-  IngestionSvc --> ReconcileSvc
-  ControlSvc --> ReconcileSvc
-  ReconcileSvc --> TraceSvc
-  TraceSvc --> fixture_target
+  ingestion --> evidence
+  trace --> evidence
+  control --> evidence
+  ingestion --> reconciliation
+  reconciliation --> evidence
+  trace --> fixture_target
 ```
 
-## Service Responsibility Table
-
-| Service | Proto Contract | Port | Owns Data | Reads Data |
+# 2. Service responsibility table
+| service | proto contract | port | data owned | data read from other services |
 |---|---|---:|---|---|
-| IngestionSvc | `proto/vulnerability.proto` | 50051 | CVE records, fingerprints | Reconciliation conflicts, evidence ACKs |
-| TraceSvc | `proto/exploit_trace.proto` | 50052 | ExploitTrace records | Fixture HTTP responses |
-| ControlSvc | `proto/control.proto` | 50053 | ASVS control registry | OWASP matrix, evidence ACKs |
-| EvidenceSvc | `proto/evidence.proto` | 50054 | Evidence ledger | Records from all services |
-| ReconcileSvc | `proto/reconciliation.proto` | 50055 | Conflict records, audit history | Vulnerability conflicts |
+| ingestion | vulnerability.v1 | 50051 | VulnerabilityRecord cache | reconciliation outcomes |
+| trace | exploit_trace.v1 | 50052 | ExploitTrace cache | evidence ids |
+| control | control.v1 | 50053 | ControlRecord registry | ASVS requirements CSV |
+| evidence | evidence.v1 | 50054 | evidence_records ledger | lineage references |
+| reconciliation | reconciliation.v1 | 50055 | ConflictRecord registry | vulnerability snapshots |
 
-## Data Lineage
-A raw NVD JSON object is parsed into `VulnerabilityRecord` (`cve_id`, `cvss_score`, `cvss_vector`, `affected_versions`, `ingestion_timestamp`) then fingerprinted (`fingerprint`). Clean ingests emit `EvidenceRecord` entries keyed by `content_hash`. Collisions emit `ConflictRecord` with field-level `ConflictDetail`; resolution creates audit entries and follow-up evidence.
+# 3. Data lineage
+NVD JSON (`cve.id`, `metrics.cvssMetricV31[0].cvssData.*`, `configurations`) -> `parser.hydrate()` -> `VulnerabilityRecord` -> `dedup.generate_fingerprint()` -> `IngestCVEResponse.fingerprint` -> `EvidenceRecord.content_hash` in ledger export.
 
-## Deduplication Design
-Fingerprint = SHA-256 of `cve_id + "|" + cvss_vector + "|" + "|".join(sorted(affected_versions))`. Duplicate fingerprints are skipped. Matching `cve_id` with differing fingerprints generate a conflict and trigger `SubmitConflict` into reconciliation with field-level deltas.
+# 4. Deduplication design
+Fingerprint: SHA-256 of `cve_id|cvss_vector|sorted(affected_versions)`. Collisions route through `detect_conflict`; strategy `LATEST_WINS`, `SOURCE_PRIORITY`, or `MANUAL` selected by reconciliation service configuration.
