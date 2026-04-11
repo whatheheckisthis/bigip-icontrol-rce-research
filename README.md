@@ -371,6 +371,91 @@ npm run clean:all      remove stubs + node_modules
 | [`scripts/release_gate.py`](./scripts/release_gate.py) | `make release` | assert zero CRITICAL gaps, all ASVS passing |
 | [`scripts/generate_readme_tables.py`](./scripts/generate_readme_tables.py) | `make readme` | regenerate OWASP table from `owasp_control_matrix.csv` |
 
+## Quickstart 
+ 
+The npm pipeline owns JS/TS stub generation, the Node-side toolchain
+(ESLint, Prettier, ts-proto), and licence auditing. It runs independently
+of the Python pipeline but shares the proto source in `proto/` and must
+complete before any TypeScript or browser-side gRPC client can consume
+the service contracts.
+ 
+```bash
+# prerequisites: node >= 20, npm >= 10
+npm run verify:tools
+# checks: node 20, npm 10 — exits non-zero with named failure if not met
+ 
+# install from lockfile — do not use npm install
+npm ci
+# installs exactly what package-lock.json specifies
+# fails if lockfile is absent or inconsistent
+ 
+# compile .proto → JS/TS stubs
+npm run build
+# pre:  npm run verify:tools
+# main: npm run proto:gen  →  generated/js/*_pb.js + generated/ts/*.ts
+#       npm run lint        →  ESLint across scripts/, zero warnings tolerated
+# post: npm run proto:check →  asserts all expected stub files exist
+ 
+# outputs
+# generated/js/   CommonJS stubs for Node gRPC clients
+# generated/ts/   TypeScript definitions via ts-proto
+ 
+# audit
+npm run audit:deps
+# npm audit --audit-level=high
+# exits non-zero on any high or critical finding
+ 
+npm run audit:licenses
+# asserts every transitive dependency is MIT, Apache-2.0, BSD-2-Clause,
+# BSD-3-Clause, or ISC — exits non-zero on any non-conforming licence
+ 
+# individual targets
+npm run proto:gen          # proto compilation only, no lint or check
+npm run proto:check        # stub existence check only
+npm run lint               # ESLint only
+npm run lint:fix           # ESLint with --fix
+npm run format             # Prettier write
+npm run format:check       # Prettier check (used in CI)
+npm run clean              # remove generated/js and generated/ts
+npm run clean:all          # remove stubs + node_modules
+```
+ 
+**Build hook chain**
+ 
+`npm run build` enforces a strict sequence via npm pre/post hooks. A
+failure at any stage stops the chain — no subsequent step runs.
+ 
+```
+prebuild  →  verify:tools       node >= 20, npm >= 10
+build     →  proto:gen          .proto → generated/js/ and generated/ts/
+          →  lint               ESLint, zero warnings
+postbuild →  proto:check        all _pb.js and .ts stubs present
+```
+ 
+**Generated outputs**
+ 
+| Directory | Format | Consumer |
+|-----------|--------|----------|
+| `generated/js/` | CommonJS (`_pb.js`, `_grpc_pb.js`) | Node.js gRPC clients |
+| `generated/ts/` | TypeScript (`.ts` via ts-proto) | TypeScript / browser clients |
+| `generated/*.py` | Python (via `make proto`) | Service layer — owned by Python pipeline |
+ 
+The `generated/` directory is committed for reproducible builds. `make proto`
+and `npm run build` are both authoritative over their respective outputs — if
+stubs diverge from proto definitions, regenerate; do not edit stubs directly.
+ 
+## Testing
+ 
+```bash
+make test              # unit + integration, coverage to terminal
+make asvs              # ASVS control verification, exports asvs_test_matrix.csv
+make audit             # pip-audit, hard fail on CVSS >= 7.0
+```
+ 
+**Unit tests** (`tests/unit/`) cover parser field mapping, fingerprint algorithm, capture serialisation, SHA-256 hasher, and all three resolution strategies. No network, no docker. **Integration tests** (`tests/integration/test_full_pipeline.py`) run the full ingest → trace → evidence → reconciliation pipeline against the live docker-compose stack using vectors from [`tests/fixtures/exploit_trace_vectors.json`](./tests/fixtures/exploit_trace_vectors.json). Requires `make services-detach` first. **ASVS tests** (`tests/asvs/`) are tagged `@pytest.mark.asvs("V{n}.{m}.{k}")`, one module per OWASP Top 10 category, each mapped to a named entry in [`owasp_control_matrix.csv`](./owasp_control_matrix.csv). `make asvs` runs these and exports [`sdlc/verification/asvs_test_matrix.csv`](./sdlc/verification/asvs_test_matrix.csv).
+ 
+The fixture constraint test in [`test_a10_ssrf.py`](./tests/asvs/test_a10_ssrf.py) asserts that `ExploitTraceService` rejects vector-004 (`http://192.168.1.1:8080`) with `INVALID_ARGUMENT` and passes all three localhost vectors. This runs on every CI push via the `asvs` job in [`.github/workflows/ci.yml`](./.github/workflows/ci.yml).
+ 
 ---
 
 ## Attribution
