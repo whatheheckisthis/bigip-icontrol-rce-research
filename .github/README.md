@@ -4,8 +4,8 @@
 Repository : bigip-icontrol-rce-research
 Path       : README.md
 Purpose    : Canonical entry document — architecture, data flow, operational runbook
-Layer      : docs
-SDLC Phase : all
+Layer     : docs
+SDLC Phase: all
 ASVS Ref   : V15.1
 OWASP Ref  : A04
 Modified   : 2026-04-11
@@ -20,7 +20,7 @@ This platform models CVE-2021-22986 — a CVSS 9.8 unauthenticated RCE in the F5
 
 ---
 
-## Architecture
+### Architecture
 
 ```mermaid
 flowchart TD
@@ -43,20 +43,20 @@ flowchart TD
     REC -->|"RecordEvidence (resolution)"| EVD
     EVD --- LED
 
-    style FIX stroke-dasharray: 6 4,stroke:#888
+    style FIX stroke-dasharray: 6 4, stroke:#888
 ```
 
 > All inter-service communication is gRPC over Protocol Buffers v3. `fixture_target.py` is the only HTTP surface and is bound exclusively to `127.0.0.1`.
 
 ---
 
-## Data Flow
+### Data Flow
 
 An NVD JSON feed is ingested by the Ingestion service, which hydrates a `VulnerabilityRecord` protobuf, generates a SHA-256 fingerprint from canonical fields, and checks for duplicates. A fingerprint collision on differing fields is routed to the Reconciliation service, which applies a configured resolution strategy and appends a full audit trail entry. In parallel, the Trace service captures structured `ExploitTrace` records from the fixture target — both the token extraction path and the Basic auth bypass path modelled in the CVE — extracts the `utilCmdArgs` injection pattern, and triggers the relevant ASVS control in the Control service. Every state transition across all five services produces an evidence record with a content hash and lineage chain in the append-only SQLite ledger.
 
 ---
 
-## Repository Map
+### Repository 
 
 ```
 bigip-icontrol-rce-research/
@@ -86,7 +86,7 @@ bigip-icontrol-rce-research/
 
 ---
 
-## Prerequisites
+### Prerequisites
 
 | Tool | Minimum | Notes |
 |------|---------|-------|
@@ -103,28 +103,37 @@ Full build documentation: [`docs/build.md`](./docs/build.md)
 
 ---
 
-## Build
+### Build
 
 ```bash
 git clone https://github.com/<org>/bigip-icontrol-rce-research
 cd bigip-icontrol-rce-research
+```
 
-# verify prerequisites
-make verify-tools && npm run verify:tools
+### verify prerequisites
+```bash
+make verify-tools && npm run verify: tools
+```
 
-# install
+### install
+```bash
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
 npm ci
+```
 
-# compile proto stubs (both pipelines)
+### compile proto stubs (both pipelines)
+```bash
 make proto
 npm run build
-
-# audit before starting services
+```
+### audit before starting services
+```bash
 make audit && npm run audit:deps && npm run audit:licenses
+```
 
-# start
+### start
+```bash
 make services-detach
 ```
 
@@ -141,7 +150,7 @@ make services-detach
 
 ---
 
-## Testing
+### Testing
 
 ```bash
 make test              # unit + integration, coverage to terminal
@@ -153,48 +162,54 @@ Unit tests: pure protobuf in/out, no network. Integration tests: full pipeline v
 
 ---
 
-## OWASP Top 10 / ASVS Coverage
+### OWASP Top 10 / ASVS Coverage
 
 > Generated from `owasp_control_matrix.csv` via `make readme`. Do not edit directly.
 
-| OWASP | ASVS | Implementation | Status |
-|-------|------|----------------|--------|
-| A01 Broken Access Control | V4.1.1 | `services/trace/server.py` — fixture URL allowlist at gRPC interceptor | ✅ |
-| A02 Cryptographic Failures | V9.2.1 | `docker-compose.yml` — TLS on gRPC channels | 🔄 |
-| A03 Injection | V5.2.3 | `services/trace/capture.py` — utilCmdArgs negative test vector | ✅ |
-| A04 Insecure Design | V1.1.1 | `sdlc/requirements/threat_model.md` — STRIDE integrated into design | ✅ |
-| A05 Security Misconfiguration | V14.4.1 | `docker-compose.yml` — internal network, localhost-only fixture bind | ✅ |
-| A06 Vulnerable Components | V14.2.1 | `requirements.txt` — pip-audit hard gate CVSS ≥ 7.0 | ✅ |
-| A07 Auth Failures | V2.1.1 | `services/trace/capture.py` — both CVE auth paths as trace vectors | ✅ |
-| A08 Software Integrity | V10.2.1 | `services/evidence/hasher.py` — SHA-256 on every evidence record | ✅ |
-| A09 Logging Failures | V7.1.1 | `services/evidence/ledger.py` — append-only SQLite, no silent failures | ✅ |
-| A10 SSRF | V10.3.2 | `services/trace/server.py` — regex allowlist at gRPC method entry | ✅ |
+---
+
+### OWASP ↔ ASVS Mapping
+
+| OWASP Category                | ASVS    | Implementation                                                        
+| ----------------------------- | ------- | ---------------------------------------------------------------------- 
+| A01 Broken Access Control     | V4.1.1  | `services/trace/server.py` — fixture URL allowlist at gRPC interceptor 
+| A02 Cryptographic Failures    | V9.2.1  | `docker-compose.yml` — TLS on gRPC channels                           
+| A03 Injection                 | V5.2.3  | `services/trace/capture.py` — utilCmdArgs negative test vector         
+| A04 Insecure Design           | V1.1.1  | `sdlc/requirements/threat_model.md` — STRIDE integrated into design    
+| A05 Security Misconfiguration | V14.4.1 | `docker-compose.yml` — internal network, localhost-only fixture bind   
+| A06 Vulnerable Components     | V14.2.1 | `requirements.txt` — pip-audit hard gate CVSS ≥ 7.0                    
+| A07 Auth Failures             | V2.1.1  | `services/trace/capture.py` — both CVE auth paths as trace vectors     
+| A08 Software Integrity        | V10.2.1 | `services/evidence/hasher.py` — SHA-256 on every evidence record       
+| A09 Logging Failures          | V7.1.1  | `services/evidence/ledger.py` — append-only SQLite, no silent failures 
+| A10 SSRF                      | V10.3.2 | `services/trace/server.py` — regex allowlist at gRPC method entry      
 
 ---
 
-## SDLC Artefact Map
+### SDLC Artefact Map
 
-| Phase | Artefact | Path | Generation |
-|-------|----------|------|------------|
-| Requirements | STRIDE threat model | `sdlc/requirements/threat_model.md` | Manual |
-| Requirements | ASVS requirements | `sdlc/requirements/asvs_requirements.csv` | Manual |
-| Design | Architecture doc | `sdlc/design/architecture.md` | Manual |
-| Design | Control design | `sdlc/design/control_design.md` | Manual |
-| Implementation | Changelog | `sdlc/implementation/CHANGELOG.md` | Per commit |
-| Verification | Test plan | `sdlc/verification/test_plan.md` | Manual |
-| Verification | ASVS test matrix | `sdlc/verification/asvs_test_matrix.csv` | `make asvs` |
-| Verification | Evidence export | `sdlc/verification/evidence_ledger_export.json` | `make evidence-export` |
-| Release | Gate checklist | `sdlc/release/release_checklist.md` | `make release` |
+| Phase          | Artefact            | Path                                            | Generation             |
+| -------------- | ------------------- | ----------------------------------------------- | ---------------------- |
+| Requirements   | STRIDE threat model | `sdlc/requirements/threat_model.md`             | Manual                 |
+| Requirements   | ASVS requirements   | `sdlc/requirements/asvs_requirements.csv`       | Manual                 |
+| Design         | Architecture doc    | `sdlc/design/architecture.md`                   | Manual                 |
+| Design         | Control design      | `sdlc/design/control_design.md`                 | Manual                 |
+| Implementation | Changelog           | `sdlc/implementation/CHANGELOG.md`              | Per commit             |
+| Verification   | Test plan           | `sdlc/verification/test_plan.md`                | Manual                 |
+| Verification   | ASVS test matrix    | `sdlc/verification/asvs_test_matrix.csv`        | `make asvs`            |
+| Verification   | Evidence export     | `sdlc/verification/evidence_ledger_export.json` | `make evidence-export` |
+| Release        | Gate checklist      | `sdlc/release/release_checklist.md`             | `make release`         |
 
 ---
 
-## Evidence Gap Register
+
+
+### Evidence Gap Register
 
 Tracked in [`evidence_gap_register.csv`](./evidence_gap_register.csv). Append-only via `EvidenceService` — manual edits are rejected at the reconciliation layer. CRITICAL items block `make release`. HIGH items warn at `make asvs`.
 
 ---
 
-## Out Of Scope
+### Out Of Scope
 
 It does not execute code against live F5 BIG-IP devices under any configuration.
 It does not ship, wrap, or republish offensive tooling — the CVE-2021-22986 PoC exists only as a parsed test vector in `tests/fixtures/`.
@@ -202,37 +217,40 @@ It is not a SIEM integration, alert triage platform, or continuous monitoring se
 
 ---
 
-## Reference
+### Reference
 
-**Makefile**
+### Makefile Commands
 
-```
-make proto             .proto → Python stubs
-make services          docker compose up
-make services-detach   docker compose up -d
-make services-down     docker compose down
-make test              unit + integration
-make asvs              ASVS control verification
-make audit             pip-audit, CVSS >= 7.0 gate
-make lint              ruff + mypy
-make evidence-export   ledger → sdlc/verification/
-make release           full gate: asvs + audit + gap register
-make clean             containers, stubs, coverage
-```
+| Command                | Description                                         |
+| ---------------------- | --------------------------------------------------- |
+| `make proto`           | Generate Python stubs from `.proto` files           |
+| `make services`        | Start services with `docker compose up`             |
+| `make services-detach` | Start services in detached mode (`-d`)              |
+| `make services-down`   | Stop and remove containers                          |
+| `make test`            | Run unit and integration tests                      |
+| `make asvs`            | Execute ASVS control verification                   |
+| `make audit`           | Run `pip-audit` with CVSS ≥ 7.0 enforcement         |
+| `make lint`            | Run `ruff` and `mypy`                               |
+| `make evidence-export` | Export ledger to `sdlc/verification/`               |
+| `make release`         | Run full release gate (ASVS + audit + gap register) |
+| `make clean`           | Remove containers, stubs, and coverage artifacts    |
 
-**npm**
+---
 
-```
-npm run build          proto:gen → lint → proto:check
-npm run audit:deps     npm audit, high severity gate
-npm run audit:licenses permissive licence allowlist
-npm run clean          remove generated/js and generated/ts
-```
+### npm Commands
+
+| Command                  | Description                                    |
+| ------------------------ | ---------------------------------------------- |
+| `npm run build`          | Run proto generation → lint → proto validation |
+| `npm run audit:deps`     | Run `npm audit` with high severity gate        |
+| `npm run audit:licenses` | Enforce permissive license allowlist           |
+| `npm run clean`          | Remove generated JS and TS artifacts           |
+
 
 ---
 
 
-## Attribution and References
+### Attribution and References
 
 CVE-2021-22986 was discovered by William McVey and Andrew Williams and reported through the F5 Security Response Team. This platform was built for SecDevOps research and ASVS control verification purposes.
 
