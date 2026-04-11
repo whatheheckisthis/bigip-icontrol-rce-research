@@ -1,4 +1,4 @@
-# bigip-icontrol-rce-research
+# icontrol-rce
 
 <!-- 
 Repository : bigip-icontrol-rce-research
@@ -194,12 +194,10 @@ Tracked in [`evidence_gap_register.csv`](./evidence_gap_register.csv). Append-on
 
 ---
 
-## What this repository does not do
+## Out Of Scope
 
 It does not execute code against live F5 BIG-IP devices under any configuration.
-
 It does not ship, wrap, or republish offensive tooling — the CVE-2021-22986 PoC exists only as a parsed test vector in `tests/fixtures/`.
-
 It is not a SIEM integration, alert triage platform, or continuous monitoring service.
 
 ---
