@@ -1,15 +1,15 @@
-# ============================================================
-# Repository : bigip-icontrol-rce-research
-# Path       : services/evidence/hasher.py
-# Purpose    : Computes SHA-256 hashes for serialized evidence payloads
-# Layer      : service
-# SDLC Phase : implementation
-# ASVS Ref   : V10.2.1
-# OWASP Ref  : A08
-# Modified   : 2026-04-10
-# ============================================================
-from __future__ import annotations
 import hashlib
+import json
 
-def sha256_text(payload: str) -> str:
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+def hash_content(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
+def hash_record(record_dict: dict) -> str:
+    payload = json.dumps(record_dict, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hash_content(payload)
+
+
+def verify(content: bytes, expected_hash: str) -> bool:
+    return hash_content(content) == expected_hash

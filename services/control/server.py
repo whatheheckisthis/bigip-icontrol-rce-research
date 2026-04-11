@@ -1,15 +1,30 @@
-# ============================================================
-# Repository : bigip-icontrol-rce-research
-# Path       : services/control/server.py
-# Purpose    : Control service aggregation helpers for control records
-# Layer      : service
-# SDLC Phase : implementation
-# ASVS Ref   : V1.1.2
-# OWASP Ref  : A04
-# Modified   : 2026-04-10
-# ============================================================
-from __future__ import annotations
-from services.control.owasp_crosswalk import map_asvs_to_owasp
+import csv
+import io
+import time
 
-def control_record(asvs_id: str, description: str) -> dict[str, str]:
-    return {"asvs_id": asvs_id, "owasp_id": map_asvs_to_owasp(asvs_id), "description": description}
+from services.control import asvs_loader
+
+
+class ControlServiceServicer:
+    def __init__(self, manifest_path: str):
+        self.registry = {c["control_id"]: c for c in asvs_loader.load(manifest_path)}
+
+    def RegisterControl(self, request, context):
+        self.registry[request["control_id"]] = request
+        return {"control_id": request["control_id"]}
+
+    def UpdateStatus(self, request, context):
+        rec = self.registry[request["control_id"]]
+        rec["status"] = request["status"]
+        if request.get("evidence_ref"):
+            rec.setdefault("evidence_refs", []).append(request["evidence_ref"])
+        rec["last_verified_timestamp"] = int(time.time())
+        return {"updated": rec}
+
+    def ExportControlMatrix(self, request, context):
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=["control_id", "owasp_category", "description", "status", "evidence_refs", "last_verified_timestamp"])
+        writer.writeheader()
+        for row in self.registry.values():
+            writer.writerow(row)
+        return {"csv_content": out.getvalue().encode("utf-8")}

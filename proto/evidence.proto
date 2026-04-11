@@ -1,22 +1,39 @@
-// ============================================================
-// Repository : bigip-icontrol-rce-research
-// Path       : proto/evidence.proto
-// Purpose    : Defines evidence ledger record schema and export APIs
-// Layer      : proto
-// SDLC Phase : design
-// ASVS Ref   : V10.2.1, V7.1.1
-// OWASP Ref  : A08, A09
-// Modified   : 2026-04-10
-// ============================================================
+// SPDX-License-Identifier: MIT
+// Generated for bigip-icontrol-rce-research
 syntax = "proto3";
 package evidence.v1;
+option python_package = "generated.evidence_v1";
 
-message EvidenceRecord { string evidence_id = 1; string event_type = 2; string payload_json = 3; string sha256 = 4; string created_at = 5; }
-message AppendEvidenceRequest { EvidenceRecord record = 1; }
-message AppendEvidenceResponse { bool stored = 1; }
-message ExportLedgerRequest {}
-message ExportLedgerResponse { repeated EvidenceRecord records = 1; }
+enum ArtefactType {
+  LOG         = 0;
+  CONFIG      = 1;
+  TEST_RESULT = 2;
+  TRACE       = 3;
+  CROSSWALK   = 4;
+}
+
+message EvidenceRecord {
+  string evidence_id          = 1;
+  ArtefactType artefact_type  = 2;
+  string source_service       = 3;
+  string content_hash         = 4;
+  string content_uri          = 5;
+  repeated string lineage     = 6;
+  int64  created_at           = 7;
+  string operator_id          = 8;
+}
+
+message RecordEvidenceRequest   { EvidenceRecord record = 1; }
+message RecordEvidenceResponse  { string evidence_id = 1; }
+message GetEvidenceRequest      { string evidence_id = 1; }
+message ChainLineageRequest     { string evidence_id = 1; repeated string parent_ids = 2; }
+message ChainLineageResponse    { EvidenceRecord updated = 1; }
+message ExportLedgerRequest     {}
+message ExportLedgerResponse    { bytes json_content = 1; string checksum = 2; }
+
 service EvidenceService {
-  rpc AppendEvidence(AppendEvidenceRequest) returns (AppendEvidenceResponse);
-  rpc ExportLedger(ExportLedgerRequest) returns (ExportLedgerResponse);
+  rpc RecordEvidence  (RecordEvidenceRequest)   returns (RecordEvidenceResponse);
+  rpc GetEvidence     (GetEvidenceRequest)       returns (EvidenceRecord);
+  rpc ChainLineage    (ChainLineageRequest)      returns (ChainLineageResponse);
+  rpc ExportLedger    (ExportLedgerRequest)      returns (ExportLedgerResponse);
 }

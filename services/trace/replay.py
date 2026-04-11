@@ -1,14 +1,21 @@
-# ============================================================
-# Repository : bigip-icontrol-rce-research
-# Path       : services/trace/replay.py
-# Purpose    : Simulates deterministic replay responses for stored trace IDs
-# Layer      : service
-# SDLC Phase : implementation
-# ASVS Ref   : V10.3.2
-# OWASP Ref  : A10
-# Modified   : 2026-04-10
-# ============================================================
-from __future__ import annotations
+import re
 
-def replay(trace_id: str) -> dict[str, str | int]:
-    return {"trace_id": trace_id, "status_code": 200, "response_body": "synthetic"}
+import httpx
+
+from services.trace.capture import ExploitTrace
+
+
+ALLOWLIST = re.compile(r"^https?://(127\.|localhost)")
+
+
+def replay(trace: ExploitTrace):
+    assert ALLOWLIST.match(trace.target_fixture_url), "target_fixture_url must resolve to localhost or 127.0.0.0/8"
+    with httpx.Client() as client:
+        response = client.request(
+            method=trace.request_method,
+            url=trace.target_fixture_url,
+            headers=trace.request_headers,
+            content=trace.request_body_raw,
+            timeout=5.0,
+        )
+    return {"trace": trace, "response_status": response.status_code, "response_body": response.text}

@@ -1,18 +1,48 @@
-// ============================================================
-// Repository : bigip-icontrol-rce-research
-// Path       : proto/reconciliation.proto
-// Purpose    : Defines conflict handling strategy contracts
-// Layer      : proto
-// SDLC Phase : design
-// ASVS Ref   : V7.1.1
-// OWASP Ref  : A09
-// Modified   : 2026-04-10
-// ============================================================
+// SPDX-License-Identifier: MIT
+// Generated for bigip-icontrol-rce-research
 syntax = "proto3";
 package reconciliation.v1;
+option python_package = "generated.reconciliation_v1";
 
-enum Strategy { STRATEGY_UNSPECIFIED = 0; LATEST_WINS = 1; MANUAL = 2; }
-message ConflictDetail { string entity_id = 1; string field_name = 2; string current_value = 3; string incoming_value = 4; Strategy strategy = 5; }
-message ResolveRequest { ConflictDetail conflict = 1; }
-message ResolveResponse { bool resolved = 1; string resolution_note = 2; }
-service ReconciliationService { rpc Resolve(ResolveRequest) returns (ResolveResponse); }
+enum ResolutionStrategy {
+  LATEST_WINS      = 0;
+  SOURCE_PRIORITY  = 1;
+  MANUAL           = 2;
+}
+
+message ConflictDetail {
+  string field_name    = 1;
+  string value_a       = 2;
+  string value_b       = 3;
+  string source_a      = 4;
+  string source_b      = 5;
+}
+
+message ConflictRecord {
+  string record_id                       = 1;
+  string record_type                     = 2;
+  map<string, ConflictDetail> conflicts  = 3;
+  ResolutionStrategy strategy            = 4;
+  int64  resolved_at                     = 5;
+  string resolved_by                     = 6;
+}
+
+message SubmitConflictRequest   { ConflictRecord conflict = 1; }
+message SubmitConflictResponse  { string record_id = 1; }
+message ResolveConflictRequest  {
+  string record_id           = 1;
+  ResolutionStrategy strategy = 2;
+  string resolved_by         = 3;
+}
+message ResolveConflictResponse { ConflictRecord resolved = 1; }
+message GetAuditTrailRequest    { string record_id = 1; }
+message GetAuditTrailResponse   { repeated ConflictRecord history = 1; }
+message ListUnresolvedRequest   { int32 limit = 1; }
+message ListUnresolvedResponse  { repeated ConflictRecord conflicts = 1; }
+
+service ReconciliationService {
+  rpc SubmitConflict    (SubmitConflictRequest)    returns (SubmitConflictResponse);
+  rpc ResolveConflict   (ResolveConflictRequest)   returns (ResolveConflictResponse);
+  rpc GetAuditTrail     (GetAuditTrailRequest)     returns (GetAuditTrailResponse);
+  rpc ListUnresolved    (ListUnresolvedRequest)    returns (ListUnresolvedResponse);
+}

@@ -1,19 +1,30 @@
-# ============================================================
-# Repository : bigip-icontrol-rce-research
-# Path       : services/reconciliation/server.py
-# Purpose    : Service helper that combines resolver and audit trail operations
-# Layer      : service
-# SDLC Phase : implementation
-# ASVS Ref   : V1.1.2
-# OWASP Ref  : A04
-# Modified   : 2026-04-10
-# ============================================================
-from __future__ import annotations
-from services.reconciliation.audit_trail import record
-from services.reconciliation.resolver import resolve
+import time
+
+from services.reconciliation import audit_trail, resolver
 
 
-def reconcile(current_value: str, incoming_value: str, strategy: str) -> str:
-    result = resolve(current_value, incoming_value, strategy)
-    record(f"{strategy}:{current_value}->{result}")
-    return result
+class ReconciliationServiceServicer:
+    def __init__(self, db_path: str):
+        self.records = {}
+        self.audit = audit_trail.AuditTrail(db_path)
+
+    def SubmitConflict(self, request, context):
+        conflict = dict(request["conflict"])
+        self.records[conflict["record_id"]] = conflict
+        if conflict.get("strategy") == "MANUAL":
+            with open("evidence_gap_register.csv", "a", encoding="utf-8") as f:
+                f.write(f"\n{conflict['record_id']},HIGH,OPEN,manual review required,secops,2026-05-01")
+        return {"record_id": conflict["record_id"]}
+
+    def ResolveConflict(self, request, context):
+        rec = self.records[request["record_id"]]
+        before = dict(rec)
+        rec["strategy"] = request["strategy"]
+        rec["resolved_by"] = request["resolved_by"]
+        rec["resolved_at"] = int(time.time())
+        self.audit.record_mutation(rec["record_id"], before, rec, request["strategy"], request["resolved_by"])
+        return {"resolved": rec}
+
+    def ListUnresolved(self, request, context):
+        unresolved = [r for r in self.records.values() if int(r.get("resolved_at", 0)) == 0]
+        return {"conflicts": unresolved[: request.get("limit", len(unresolved))]}

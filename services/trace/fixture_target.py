@@ -1,23 +1,25 @@
-# ============================================================
-# Repository : bigip-icontrol-rce-research
-# Path       : services/trace/fixture_target.py
-# Purpose    : FastAPI fixture endpoints that model iControl request/response behavior safely
-# Layer      : service
-# SDLC Phase : implementation
-# ASVS Ref   : V10.3.2
-# OWASP Ref  : A10
-# Modified   : 2026-04-10
-# ============================================================
-from __future__ import annotations
+import logging
+import os
+
 from fastapi import FastAPI
 
-app = FastAPI(title="fixture-target")
+assert os.environ.get("FIXTURE_MODE") == "true", "fixture_target must only run with FIXTURE_MODE=true"
+
+app = FastAPI(title="Synthetic iControl Fixture")
+logger = logging.getLogger("fixture_target")
+
 
 @app.post("/mgmt/shared/authn/login")
-def login() -> dict[str, str]:
-    return {"token": "synthetic-token"}
+def login() -> dict:
+    return {"selfLink": "https://localhost/mgmt/shared/authz/tokens/SYNTHETIC-TOKEN-001"}
+
 
 @app.post("/mgmt/tm/util/bash")
-def util_bash(payload: dict[str, str]) -> dict[str, str]:
-    cmd = payload.get("utilCmdArgs", "")
-    return {"commandResult": f"synthetic output for {cmd}"}
+def util_bash(payload: dict) -> dict:
+    logger.info("exploit_trace", extra={"utilCmdArgs": payload.get("utilCmdArgs", "")})
+    return {"commandResult": "synthetic-output\n"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8080)

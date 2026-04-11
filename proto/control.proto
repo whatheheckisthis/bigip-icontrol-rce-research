@@ -1,17 +1,43 @@
-// ============================================================
-// Repository : bigip-icontrol-rce-research
-// Path       : proto/control.proto
-// Purpose    : Defines ASVS control registry and mapping service contracts
-// Layer      : proto
-// SDLC Phase : design
-// ASVS Ref   : V1.1.2
-// OWASP Ref  : A04
-// Modified   : 2026-04-10
-// ============================================================
+// SPDX-License-Identifier: MIT
+// Generated for bigip-icontrol-rce-research
 syntax = "proto3";
 package control.v1;
+option python_package = "generated.control_v1";
 
-message ControlRecord { string asvs_id = 1; string owasp_id = 2; string description = 3; string status = 4; }
-message ListControlsRequest {}
-message ListControlsResponse { repeated ControlRecord controls = 1; }
-service ControlService { rpc ListControls(ListControlsRequest) returns (ListControlsResponse); }
+enum ImplementationStatus {
+  NOT_STARTED  = 0;
+  IN_PROGRESS  = 1;
+  IMPLEMENTED  = 2;
+  VERIFIED     = 3;
+}
+
+message ControlRecord {
+  string control_id            = 1;
+  string owasp_category        = 2;
+  string description           = 3;
+  ImplementationStatus status  = 4;
+  repeated string evidence_refs = 5;
+  int64  last_verified_timestamp = 6;
+}
+
+message RegisterControlRequest  { ControlRecord control = 1; }
+message RegisterControlResponse { string control_id = 1; }
+message UpdateStatusRequest {
+  string control_id          = 1;
+  ImplementationStatus status = 2;
+  string evidence_ref        = 3;
+}
+message UpdateStatusResponse    { ControlRecord updated = 1; }
+message GetControlRequest       { string control_id = 1; }
+message ListByOWASPRequest      { string owasp_category = 1; }
+message ListByOWASPResponse     { repeated ControlRecord controls = 1; }
+message ExportControlMatrixRequest  {}
+message ExportControlMatrixResponse { bytes csv_content = 1; }
+
+service ControlService {
+  rpc RegisterControl       (RegisterControlRequest)       returns (RegisterControlResponse);
+  rpc UpdateStatus          (UpdateStatusRequest)          returns (UpdateStatusResponse);
+  rpc GetControl            (GetControlRequest)            returns (ControlRecord);
+  rpc ListByOWASPCategory   (ListByOWASPRequest)           returns (ListByOWASPResponse);
+  rpc ExportControlMatrix   (ExportControlMatrixRequest)   returns (ExportControlMatrixResponse);
+}
