@@ -1,8 +1,8 @@
-# icontrol-rce
+# bigip-icontrol-rce-research (BII-RR)
 
 <!-- 
 Repository : bigip-icontrol-rce-research
-Path       : README.md
+Path      : README.md
 Purpose    : Canonical entry document — architecture, data flow, operational runbook
 Layer     : docs
 SDLC Phase: all
@@ -18,7 +18,7 @@ This platform models CVE-2021-22986 — a CVSS 9.8 unauthenticated RCE in the F5
 
 ![Python](https://img.shields.io/badge/python-3.12-blue) ![Node](https://img.shields.io/badge/node-%E2%89%A520.x-brightgreen) ![gRPC](https://img.shields.io/badge/grpc-protobuf_v3-informational) ![ASVS](https://img.shields.io/badge/ASVS-L2-success) ![pip--audit](https://img.shields.io/badge/pip--audit-passing-success) ![npm--audit](https://img.shields.io/badge/npm--audit-passing-success) ![Tests](https://img.shields.io/badge/tests-passing-success)
 
----
+
 
 ### Architecture
 
@@ -48,13 +48,13 @@ flowchart TD
 
 > All inter-service communication is gRPC over Protocol Buffers v3. `fixture_target.py` is the only HTTP surface and is bound exclusively to `127.0.0.1`.
 
----
+
 
 ### Data Flow
 
 An NVD JSON feed is ingested by the Ingestion service, which hydrates a `VulnerabilityRecord` protobuf, generates a SHA-256 fingerprint from canonical fields, and checks for duplicates. A fingerprint collision on differing fields is routed to the Reconciliation service, which applies a configured resolution strategy and appends a full audit trail entry. In parallel, the Trace service captures structured `ExploitTrace` records from the fixture target — both the token extraction path and the Basic auth bypass path modelled in the CVE — extracts the `utilCmdArgs` injection pattern, and triggers the relevant ASVS control in the Control service. Every state transition across all five services produces an evidence record with a content hash and lineage chain in the append-only SQLite ledger.
 
----
+
 
 ### Repository 
 
@@ -103,36 +103,32 @@ Full build documentation: [`docs/build.md`](./docs/build.md)
 
 ---
 
-### Build
+### build
 
 ```bash
 git clone https://github.com/<org>/bigip-icontrol-rce-research
 cd bigip-icontrol-rce-research
 ```
 
-### verify prerequisites
 ```bash
 make verify-tools && npm run verify: tools
 ```
 
-### install
 ```bash
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
 npm ci
 ```
 
-### compile proto stubs (both pipelines)
 ```bash
 make proto
 npm run build
 ```
-### audit before starting services
+
 ```bash
 make audit && npm run audit:deps && npm run audit:licenses
 ```
 
-### start
 ```bash
 make services-detach
 ```
@@ -148,7 +144,7 @@ make services-detach
 | Reconciliation | 50055 | 0.0.0.0 | gRPC |
 | fixture_target | 8080 | 127.0.0.1 | HTTP |
 
----
+
 
 ### Testing
 
@@ -160,17 +156,13 @@ make audit             # pip-audit, hard fail on CVSS >= 7.0
 
 Unit tests: pure protobuf in/out, no network. Integration tests: full pipeline via gRPC client harness against the docker-compose stack using serialised test vectors. ASVS tests: tagged `@pytest.mark.asvs("V{n}.{m}.{k}")`, each mapped to a named entry in `owasp_control_matrix.csv`.
 
----
+
 
 ### OWASP Top 10 / ASVS Coverage
 
 > Generated from `owasp_control_matrix.csv` via `make readme`. Do not edit directly.
 
----
-
-### OWASP ↔ ASVS Mapping
-
-| OWASP Category                | ASVS    | Implementation                                                        
+| OWASP            | ASVS    | Implementation                                                        
 | ----------------------------- | ------- | ---------------------------------------------------------------------- 
 | A01 Broken Access Control     | V4.1.1  | `services/trace/server.py` — fixture URL allowlist at gRPC interceptor 
 | A02 Cryptographic Failures    | V9.2.1  | `docker-compose.yml` — TLS on gRPC channels                           
@@ -183,71 +175,12 @@ Unit tests: pure protobuf in/out, no network. Integration tests: full pipeline v
 | A09 Logging Failures          | V7.1.1  | `services/evidence/ledger.py` — append-only SQLite, no silent failures 
 | A10 SSRF                      | V10.3.2 | `services/trace/server.py` — regex allowlist at gRPC method entry      
 
----
-
-### SDLC Artefact Map
-
-| Phase          | Artefact            | Path                                            | Generation             |
-| -------------- | ------------------- | ----------------------------------------------- | ---------------------- |
-| Requirements   | STRIDE threat model | `sdlc/requirements/threat_model.md`             | Manual                 |
-| Requirements   | ASVS requirements   | `sdlc/requirements/asvs_requirements.csv`       | Manual                 |
-| Design         | Architecture doc    | `sdlc/design/architecture.md`                   | Manual                 |
-| Design         | Control design      | `sdlc/design/control_design.md`                 | Manual                 |
-| Implementation | Changelog           | `sdlc/implementation/CHANGELOG.md`              | Per commit             |
-| Verification   | Test plan           | `sdlc/verification/test_plan.md`                | Manual                 |
-| Verification   | ASVS test matrix    | `sdlc/verification/asvs_test_matrix.csv`        | `make asvs`            |
-| Verification   | Evidence export     | `sdlc/verification/evidence_ledger_export.json` | `make evidence-export` |
-| Release        | Gate checklist      | `sdlc/release/release_checklist.md`             | `make release`         |
-
----
-
 
 
 ### Evidence Gap Register
 
 Tracked in [`evidence_gap_register.csv`](./evidence_gap_register.csv). Append-only via `EvidenceService` — manual edits are rejected at the reconciliation layer. CRITICAL items block `make release`. HIGH items warn at `make asvs`.
 
----
-
-### Out Of Scope
-
-It does not execute code against live F5 BIG-IP devices under any configuration.
-It does not ship, wrap, or republish offensive tooling — the CVE-2021-22986 PoC exists only as a parsed test vector in `tests/fixtures/`.
-It is not a SIEM integration, alert triage platform, or continuous monitoring service.
-
----
-
-### Reference
-
-### Makefile Commands
-
-| Command                | Description                                         |
-| ---------------------- | --------------------------------------------------- |
-| `make proto`           | Generate Python stubs from `.proto` files           |
-| `make services`        | Start services with `docker compose up`             |
-| `make services-detach` | Start services in detached mode (`-d`)              |
-| `make services-down`   | Stop and remove containers                          |
-| `make test`            | Run unit and integration tests                      |
-| `make asvs`            | Execute ASVS control verification                   |
-| `make audit`           | Run `pip-audit` with CVSS ≥ 7.0 enforcement         |
-| `make lint`            | Run `ruff` and `mypy`                               |
-| `make evidence-export` | Export ledger to `sdlc/verification/`               |
-| `make release`         | Run full release gate (ASVS + audit + gap register) |
-| `make clean`           | Remove containers, stubs, and coverage artifacts    |
-
----
-
-### npm Commands
-
-| Command                  | Description                                    |
-| ------------------------ | ---------------------------------------------- |
-| `npm run build`          | Run proto generation → lint → proto validation |
-| `npm run audit:deps`     | Run `npm audit` with high severity gate        |
-| `npm run audit:licenses` | Enforce permissive license allowlist           |
-| `npm run clean`          | Remove generated JS and TS artifacts           |
-
-
----
 
 
 ### Attribution and References
