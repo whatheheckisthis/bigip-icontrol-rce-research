@@ -1,0 +1,19 @@
+name: Branch Lint
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  branch-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          if ! echo "$BRANCH" | grep -qE \
+            '^(feat|fix|chore|sdlc|gap|release)/[a-z][a-z0-9-]+$'; then
+            echo "Branch name '$BRANCH' does not match convention."
+            echo "Required: <type>/<scope>-<description>"
+            echo "Types: feat fix chore sdlc gap release"
+            exit 1
+          fi

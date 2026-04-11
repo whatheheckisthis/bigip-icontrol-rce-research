@@ -12,7 +12,10 @@
   "name": "bigip-icontrol-rce-research",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=20.0.0", "npm": ">=10.0.0" },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "prebuild": "npm run verify:tools",
     "build": "npm run proto:gen && npm run lint",
@@ -29,7 +32,8 @@
     "audit:deps": "npm audit --audit-level=high",
     "audit:licenses": "license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC'",
     "clean": "rimraf generated/js generated/ts",
-    "clean:all": "npm run clean && rimraf node_modules"
+    "clean:all": "npm run clean && rimraf node_modules",
+    "commitlint": "commitlint --edit"
   },
   "devDependencies": {
     "@types/node": "20.12.7",
@@ -40,6 +44,8 @@
     "protoc-gen-grpc-web": "1.5.0",
     "rimraf": "5.0.5",
     "ts-proto": "1.169.0",
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+    "@commitlint/cli": "19.3.0",
+    "@commitlint/config-conventional": "19.2.2"
   }
 }
