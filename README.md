@@ -383,12 +383,14 @@ the service contracts.
 # prerequisites: node >= 20, npm >= 10
 npm run verify:tools
 # checks: node 20, npm 10 — exits non-zero with named failure if not met
- 
+```
+```
 # install from lockfile — do not use npm install
 npm ci
 # installs exactly what package-lock.json specifies
 # fails if lockfile is absent or inconsistent
- 
+```
+``` 
 # compile .proto → JS/TS stubs
 npm run build
 # pre:  npm run verify:tools
@@ -399,7 +401,8 @@ npm run build
 # outputs
 # generated/js/   CommonJS stubs for Node gRPC clients
 # generated/ts/   TypeScript definitions via ts-proto
- 
+```
+```
 # audit
 npm run audit:deps
 # npm audit --audit-level=high
@@ -408,7 +411,8 @@ npm run audit:deps
 npm run audit:licenses
 # asserts every transitive dependency is MIT, Apache-2.0, BSD-2-Clause,
 # BSD-3-Clause, or ISC — exits non-zero on any non-conforming licence
- 
+```
+```
 # individual targets
 npm run proto:gen          # proto compilation only, no lint or check
 npm run proto:check        # stub existence check only
@@ -418,6 +422,7 @@ npm run format             # Prettier write
 npm run format:check       # Prettier check (used in CI)
 npm run clean              # remove generated/js and generated/ts
 npm run clean:all          # remove stubs + node_modules
+
 ```
  
 **Build hook chain**
