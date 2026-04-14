@@ -1,4 +1,4 @@
-# bigip-icontrol-rce-research
+# BigIP-iControl-RCE-Research
 
 <!-- 
 Repository : bigip-icontrol-rce-research
